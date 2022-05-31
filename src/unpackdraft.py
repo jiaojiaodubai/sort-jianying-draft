@@ -140,7 +140,7 @@ class UnpackDraft(tk.Frame):
                 for draft in self.draft_todo[public.names2name(self.draft_todo).index(self.draft_comb.get())]:
                     meta_path = '{}\\meta'.format(os.path.abspath(os.path.dirname(draft)))
                     self.rewrite_json(draft)
-                    self.p.paths[0][0] = 'C:\\test'
+                    # self.p.paths[0][0] = 'C:\\test'
                     public.win32_shell_copy(draft, '{}\\{}'.format(self.p.paths[0][0], os.path.basename(draft)))
                     if self.val1.get() != 1:
                         if os.path.exists(meta_path):
