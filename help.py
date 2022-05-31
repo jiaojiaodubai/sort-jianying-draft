@@ -6,10 +6,10 @@ import webbrowser as wb
 class Help(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, width=520, height=150)
-        txt = scrolledtext.ScrolledText(self, width=68, height=9.4)
+        txt = scrolledtext.ScrolledText(self, width=68, height=9.4, padx=5, pady=5)
         txt.tag_configure('about author', justify='center', foreground='Violet')  # 设置tag属性
         # 由于文本框比较复杂，因此得用专门的方法来插入文字
-        txt.insert(1.0, '{:*^35}'.format('与我联系') + '\n')  # 插入第一行，第0个字符，行从1开始算，字符从0开始算
+        txt.insert(1.0, '{:*^60}'.format('与我联系') + '\n')  # 插入第一行，第0个字符，行从1开始算，字符从0开始算
         txt.tag_add('about author', '1.0', '1.end')  # 将名为“about author”的tag的属性应用到第1行第0个字符知道该行结束
         txt.insert(2.0, 'CSDN：\n')
         txt.insert(3.0, '博客园：\n')
@@ -21,13 +21,18 @@ class Help(tk.Frame):
                                                   text='jiaojiaodubai23'))
         txt.tag_configure('update', justify='center', foreground='Violet')  # 设置tag属性
         # 由于文本框比较复杂，因此得用专门的方法来插入文字
-        txt.insert(4.0, '{:*^35}'.format('发布地址') + '\n')  # 插入第一行，第0个字符，行从1开始算，字符从0开始算
-        txt.tag_add('about author', '4.0', '1.end')
-        txt.insert(4.0, 'github：\n')
-        txt.window_create('4.6', window=LinkLabel(txt,
+        txt.insert(4.0, '{:*^60}'.format('发布地址') + '\n')  # 插入第一行，第0个字符，行从1开始算，字符从0开始算
+        txt.tag_add('update', '4.0', '4.end')
+        txt.insert(5.0, 'github：\n')
+        txt.window_create('5.7', window=LinkLabel(txt,
                                                   link='',
-                                                  text='sort-jianying-daft'
+                                                  text='https://github.com/jiaojiaodubai/sort-jianying-draft'
                                                   ))
+        txt.insert(6.0, 'gitee：\n')
+        txt.window_create('6.end', window=LinkLabel(txt,
+                                                    link='',
+                                                    text='https://gitee.com/jiaojiaodubai/sort-jianying-draft'
+                                                    ))
         # foreground是文字颜色，background
         txt.config(state=tk.DISABLED, font=16)
         txt.grid(column=0, row=0)
@@ -38,7 +43,7 @@ class LinkLabel(tk.Label):
 
     # LinkLabel可以显示超链接
     def __init__(self, master, link, text):
-        super().__init__(master, text=text, )
+        super().__init__(master, text=text, background='#FFFFFF')
         self.link = link
         self.bind('<Enter>', self.change_color)
         self.bind('<Leave>', self.change_cursor)
