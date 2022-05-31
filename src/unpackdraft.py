@@ -1,4 +1,6 @@
+import configparser
 import os
+import pathlib
 import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -25,7 +27,7 @@ class UnpackDraft(tk.Frame):
     def __init__(self, parent, label):
         super().__init__(parent, width=520, height=150)
         self.draft_target = self.p.paths[0][0]
-        self.meta_target = ['{}\\metas\\'.format(self.p.paths[1][0]), ]
+        self.meta_target = ['{}/metas'.format(self.p.paths[1][0]), ]
         draft_label = tk.Label(self, text='已选草稿：')
         export_label = tk.Label(self, text='素材路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
@@ -67,10 +69,10 @@ class UnpackDraft(tk.Frame):
         self.export_button.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
         self.message = label
         self.p.read_path()
-        if os.path.exists('{}\\metas\\'.format(self.p.paths[1][0])):
+        if os.path.exists('{}/metas'.format(self.p.paths[1][0])):
             pass
         else:
-            os.mkdir('{}\\metas\\'.format(self.p.paths[1][0]))
+            os.mkdir('{}/metas'.format(self.p.paths[1][0]))
 
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
@@ -100,21 +102,27 @@ class UnpackDraft(tk.Frame):
         keys = ['draft_path', 'cache_path', 'equip_path', 'meta_path_simp']
         # 旧的素材目录名称需要自己读取、自己分割
         paths_old = []
-        self.p.configer.read('{}\\config.ini'.format(draft_path, encoding='utf-8'))
+        configer = configparser.ConfigParser()
+        configer.read('{}/config.ini'.format(os.path.abspath(os.path.dirname(draft_path))), encoding='utf-8')
         for key in keys:
-            ls_tem = self.p.configer.get('paths', key).split(',')
+            ls_tem = configer.get('paths', key).split(',')
             paths_old.append(sorted(ls_tem, key=lambda i: len(i), reverse=True))
         self.p.read_path()  # 更新了p.paths
         path_new = self.p.paths[0:-2]  # 目标和源还算是不要冲突比较好，否则两个功能会干扰
-        path_new.append(self.meta_target)
+        target = '{}/{}'.format(self.meta_target[0], os.path.basename(draft_path))
+        path_new.append([target, ])
         # 遍历三个文件
         for json in json_file:
-            with open('{}\\{}'.format(draft_path, json), 'r', encoding='utf-8') as f:
+            with open('{}/{}'.format(draft_path, json), 'r', encoding='utf-8') as f:
                 s = f.read()
                 # 遍历四种路径
                 for j in range(4):
                     for path in paths_old[j]:  # 从长到短把路径换掉
-                        s.replace(path, path_new[j][0])  # 统一换为guide提供的第一个
+                        path_temp = path_new[j][0].replace('\\', '/')
+                        s = s.replace(path, path_temp)  # 统一换为guide提供的第一个
+            f.close()
+            with open('{}/{}'.format(draft_path, json), 'w', encoding='utf-8') as f:
+                f.write(s)
             f.close()
 
     def _import(self):
@@ -138,14 +146,15 @@ class UnpackDraft(tk.Frame):
                 # self.p.paths[4].append([self.meta_comb.get()])
                 # 依据组合框的显示的值来确定操作哪一组草稿
                 for draft in self.draft_todo[public.names2name(self.draft_todo).index(self.draft_comb.get())]:
-                    meta_path = '{}\\meta'.format(os.path.abspath(os.path.dirname(draft)))
+                    meta_path = '{}/meta'.format(os.path.abspath(os.path.dirname(draft)))
+                    self.p.write_path()
                     self.rewrite_json(draft)
-                    # self.p.paths[0][0] = 'C:\\test'
-                    public.win32_shell_copy(draft, '{}\\{}'.format(self.p.paths[0][0], os.path.basename(draft)))
+                    public.win32_shell_copy(draft, '{}/{}'.format(self.p.paths[0][0], os.path.basename(draft)))
                     if self.val1.get() != 1:
                         if os.path.exists(meta_path):
-                            public.win32_shell_copy(meta_path,
-                                                    '{}\\{}'.format(self.meta_target[0], os.path.basename(draft)))
+                            public.win32_shell_copy(meta_path, self.meta_target[0])
+                            os.rename('{}/meta'.format(self.meta_target[0]),
+                                      '{}/{}'.format(self.meta_target[0], os.path.basename(draft)))
                         else:
                             self.message.config(text='注意，该草稿没有媒体文件！')
                             messagebox.showinfo('可能遇到了异常', '该工程没有媒体文件\n请在后续步骤中链接素材！')

@@ -105,16 +105,22 @@ class PackDraft(tk.Frame):
                                                    )
         one_todo = []
         for link in links_select:
+            # print(os.path.abspath(os.path.split(link)[0]))
             # 直接split出来的斜杠方向和abspath出来的不一样，需要统一化
-            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('../draft-preview'):
-                one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
-                self.drafts_todo.insert(0, tuple(one_todo))
-                self.draft_comb.config(values=public.names2name(self.drafts_todo))
-                self.draft_comb.current(0)
-                self.message.config(text='草稿选取完毕！')
-            else:
-                messagebox.showwarning(title='操作有误', message='你选择的文件有误！')
-                break
+            # if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('../draft-preview'):
+            #     one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
+            #     self.drafts_todo.insert(0, tuple(one_todo))
+            #     self.draft_comb.config(values=public.names2name(self.drafts_todo))
+            #     self.draft_comb.current(0)
+            #     self.message.config(text='草稿选取完毕！')
+            # else:
+            #     messagebox.showwarning(title='操作有误', message='你选择的文件有误！')
+            #     break
+            one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
+            self.drafts_todo.insert(0, tuple(one_todo))
+            self.draft_comb.config(values=public.names2name(self.drafts_todo))
+            self.draft_comb.current(0)
+            self.message.config(text='草稿选取完毕！')
 
     def analyse_meta(self, draft_path: str):
         # 每次执行新项目就要清空上次的记录，否则记录会叠加
@@ -163,6 +169,7 @@ class PackDraft(tk.Frame):
                     # 复制的是文件，则复制后也应当是文件
                     for path in self.p.paths[3]:
                         public.win32_shell_copy(path, '{}\\meta\\{}'.format(filepath, os.path.basename(path)))
+                        # TODO:这里有风险，优势会有重名文件覆盖
                 if self.val2.get() == 1:
                     self.message.config(text='正在压缩单文件...')
                     shutil.make_archive(filepath, 'zip', self.export_path[0])
