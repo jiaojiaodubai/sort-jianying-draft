@@ -88,12 +88,12 @@ class PathManager:
     def collect_draft(self):
         self.read_path()
         all_draft = []
-        if not os.path.exists('draft-preview'):  # 判断文件夹是否存在
-            os.mkdir('draft-preview')  # 不存在则新建文件夹
+        if not os.path.exists('../draft-preview'):  # 判断文件夹是否存在
+            os.mkdir('../draft-preview')  # 不存在则新建文件夹
         else:
             # os.rmdir只能删除空文件夹，不空会报错，因此用shutil
-            shutil.rmtree('draft-preview')
-            os.mkdir('draft-preview')
+            shutil.rmtree('../draft-preview')
+            os.mkdir('../draft-preview')
         for path in self.paths[0]:
             ls = os.listdir(path)
             for item in ls:

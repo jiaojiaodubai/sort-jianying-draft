@@ -90,7 +90,7 @@ class ExVoice(tk.Frame):
         one_todo = []
         for link in links_select:
             # 直接split出来的斜杠方向和abspath出来的不一样，需要统一化
-            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('draft-preview'):
+            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('../draft-preview'):
                 one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
             else:
                 messagebox.showwarning(title='操作有误', message='你选择的文件有误！')

@@ -1,5 +1,4 @@
-import help
-from help import Help
+from src import help
 import tkinter as tk
 
 t = tk.Tk()

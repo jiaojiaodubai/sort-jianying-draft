@@ -106,7 +106,7 @@ class ExTittle(tk.Frame):
         one_todo = []
         for link in links_select:
             # 直接split出来的斜杠方向和abspath出来的不一样，需要统一化
-            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('draft-preview'):
+            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('../draft-preview'):
                 one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
                 self.drafts_todo.insert(0, tuple(one_todo))
                 self.draft_comb.config(values=public.names2name(self.drafts_todo))
