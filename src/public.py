@@ -1,5 +1,6 @@
 import configparser
 import os
+import re
 import shutil
 import winreg
 import win32com.client
@@ -42,6 +43,12 @@ nH2+AQIPPP94AgQaff7wBAg0+/70GSBJZ6fE2UJIyKz3eBkpSZqXH20BJyqz0eBsoSZmVHm8DJSmz0uN
 7k5578zdSkjJq7U56bhe9mr+ZkpRJa2fW7pTgwfwNlaRMWjtThptFX83fVEnKoLUra2dKsQ70aHo7IEmfae3G2pFy5T9lfV9zt+jZ9BWhJK0dWLuwdmL6e/7
 /AiEyk2L6pbvLAAAAAElFTkSuQmCC '''
 
+rule = [
+            [r'.*\\JianyingPro Drafts$', r'.*\\com[.]lveditor[.]draft$', ],
+            [r'.*\\JianyingPro\\User Data\\Cache$', ],
+            [r'.*\\JianyingPro\\(\d|[.])*\\Resources$', r'.*\\JianyingPro\\Apps\\(\d|[.])*\\Resources$']
+        ]
+
 
 class PathManager:
     path_names = ['draft_path', 'cache_path', 'equip_path', 'meta_path', 'meta_path_simp']
@@ -73,7 +80,8 @@ class PathManager:
         if os.path.exists('config.ini'):
             self.configer.read('config.ini', encoding='utf-8')
             for i in range(4):
-                if self.configer.has_option('paths', self.path_names[i]):
+                if self.configer.has_option('paths', self.path_names[i]) \
+                        and self.configer.get('paths', self.path_names[i]) != '':
                     self.paths[i] = self.configer.get('paths', self.path_names[i]).split(',')
                 elif i < 3:
                     return False
@@ -88,12 +96,13 @@ class PathManager:
     def collect_draft(self):
         self.read_path()
         all_draft = []
-        if not os.path.exists('../draft-preview'):  # 判断文件夹是否存在
-            os.mkdir('../draft-preview')  # 不存在则新建文件夹
+        if not os.path.exists('./draft-preview'):  # 判断文件夹是否存在
+            os.mkdir('./draft-preview')  # 不存在则新建文件夹
         else:
             # os.rmdir只能删除空文件夹，不空会报错，因此用shutil
-            shutil.rmtree('../draft-preview')
-            os.mkdir('../draft-preview')
+            shutil.rmtree('./draft-preview')
+            os.mkdir('./draft-preview')
+        # 遍历所有名称满足条件草稿的路径
         for path in self.paths[0]:
             ls = os.listdir(path)
             for item in ls:
@@ -111,7 +120,7 @@ class PathManager:
                     #     Icon=('{}\\draft_cover.ico'.format(full_path), 0),
                     #     Description='单击选中该草稿'
                     # )
-                    shortcut = self.shells.CreateShortCut(r'draft-preview\{}.lnk'.format(item))
+                    shortcut = self.shells.CreateShortCut('./draft-preview/{}.lnk'.format(item))
                     shortcut.Targetpath = full_path
                     shortcut.save()
                     all_draft.append(full_path)
@@ -159,18 +168,9 @@ def win32_shell_copy(src, dest):
 # 以下方法只能创建文件夹，不能复制内部的内容，原因有待考究
 # noinspection SpellCheckingInspection
 # https: // docs.microsoft.com / zh - cn / windows / win32 / api / shellapi / ns - shellapi - shfileopstructa?redirectedfrom = MSDN
-#
 # https: // stackoverflow.com / questions / 16867615 / copy - using - the - windows - copy - dialog
-#
 # https: // stackoverflow.com / questions / 5768403 / shfileoperation - doesnt - move - all - of - a - folders - contents
 # https: // stackoverflow.com / questions / 4611237 / double - null - terminated - string
-# shell.SHFileOperation((0,
-#                        shellcon.FO_COPY,
-#                        '{}\0'.format(draft),
-#                        '{}\\{}\0'.format(filepath, os.path.basename(draft)),
-#                        shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI,
-#                        None,
-#                        None))
 
 def names2name(names: list):
     name = []
@@ -181,3 +181,11 @@ def names2name(names: list):
             temp_group.append(os.path.basename(one_name))  # append确保新生成的名称表的顺序与原来一致
         name.append(','.join(temp_group))
     return name
+
+
+def is_match(path_str: str, position: int):
+    is_find = False
+    for key in rule[position]:
+        if re.match(key, path_str):
+            is_find = True
+    return is_find

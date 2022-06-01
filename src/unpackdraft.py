@@ -118,7 +118,7 @@ class UnpackDraft(tk.Frame):
                 # 遍历四种路径
                 for j in range(4):
                     for path in paths_old[j]:  # 从长到短把路径换掉
-                        path_temp = path_new[j][0].replace('\\', '/')
+                        path_temp = pathlib.PurePath(path_new[j][0]).as_posix()
                         s = s.replace(path, path_temp)  # 统一换为guide提供的第一个
             f.close()
             with open('{}/{}'.format(draft_path, json), 'w', encoding='utf-8') as f:

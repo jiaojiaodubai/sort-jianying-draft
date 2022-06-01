@@ -2,11 +2,11 @@ import base64
 import os
 import tkinter as tk
 from tkinter import ttk
-
 import extittle
 import exvoice
 import help
 import packdraft
+import unpackdraft
 import public as pb
 
 
@@ -18,27 +18,24 @@ import public as pb
 #     else:
 #         corner = ((x - y) // 2, 0, ((x - y) // 2) + y, y)
 #     return corner
-import unpackdraft
 
 
-class WorkFrame:
-    mainWin: tk.Tk
+class WorkFrame(tk.Toplevel):
     message: tk.Label
 
     # noinspection SpellCheckingInspection
-    def __init__(self):
-        self.mainWin = tk.Tk()
-        self.mainWin.title('剪映草稿助手')
+    def __init__(self, master):
+        super().__init__(master)
+        self.title('剪映草稿助手')
         with open('tmp.ico', 'wb') as tmp:
             tmp.write(base64.b64decode(pb.img))
-        self.mainWin.iconbitmap('tmp.ico')
+        self.iconbitmap('tmp.ico')
         os.remove('tmp.ico')
-        self.mainWin.geometry('580x215+300+250')
-        self.mainWin.resizable(False, False)
-        self.message = tk.Label(self.mainWin, text='等待中...')
-        notebook = ttk.Notebook(self.mainWin)
+        self.geometry('580x220+300+250')
+        self.resizable(False, True)
+        self.message = tk.Label(self, text='等待中...')
+        notebook = ttk.Notebook(self)
         notebook.grid(row=0, column=0, padx=5, pady=5)
-        # notebook.grid(row=0, column=0, padx=5, pady=5)
         frame1 = packdraft.PackDraft(notebook, self.message)
         frame2 = unpackdraft.UnpackDraft(notebook, self.message)
         frame3 = extittle.ExTittle(notebook, self.message)
@@ -50,4 +47,4 @@ class WorkFrame:
         notebook.add(frame4, text='{: ^19}'.format('导出配音'))
         notebook.add(frame5, text='{: ^19}'.format('帮助'))
         self.message.grid(row=1, column=0, sticky='w')
-        self.mainWin.mainloop()
+        # self.mainloop()

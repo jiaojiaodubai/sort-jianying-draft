@@ -1,8 +1,3 @@
-from src import help
-import tkinter as tk
+from src.guide import Guide
 
-t = tk.Tk()
-m = help.Help(t)
-m.pack(side=tk.LEFT)
-t.geometry('520x150')
-t.mainloop()
+g = Guide()

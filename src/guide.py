@@ -1,11 +1,11 @@
+import _thread
 import base64
 import os
-import re
+import pathlib as pl
 import time
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter import filedialog
-from pathlib import Path
 import threading
 import public
 import psutil
@@ -13,7 +13,7 @@ import psutil
 import workframe
 
 
-class Guide:
+class Guide(tk.Tk):
     guide: tk.Tk
     message: tk.Label
     draft_comb: ttk.Combobox
@@ -29,23 +29,24 @@ class Guide:
     p = public.PathManager()
 
     def __init__(self):
-        self.guide = tk.Tk()
+        super().__init__()
         # with open会自动帮我们关闭文件，不需要手动关闭
+        self.w = None
         with open('tmp.ico', 'wb') as tmp:  # wb表示以覆盖写模式、二进制方式打开文件
             tmp.write(base64.b64decode(public.img))
-        self.guide.iconbitmap('tmp.ico')
+        self.iconbitmap('tmp.ico')
         os.remove('tmp.ico')
-        self.guide.title('导入路径')
-        self.guide.geometry('550x255+300+250')
+        self.title('导入路径')
+        self.geometry('550x255+300+250')
         # 第一列标签的初始化及捆绑
-        draft_path_label = tk.Label(self.guide, text='Draft路径：')
-        cache_path_label = tk.Label(self.guide, text='Cache路径：')
-        cloud_path_label = tk.Label(self.guide, text='Resources路径：')
+        draft_path_label = tk.Label(self, text='Draft路径：')
+        cache_path_label = tk.Label(self, text='Cache路径：')
+        cloud_path_label = tk.Label(self, text='Resources路径：')
         labels = [draft_path_label, cache_path_label, cloud_path_label]
         # 第二列输入框的初始化及捆绑
-        self.draft_comb = ttk.Combobox(self.guide, width=52)
-        self.cache_comb = ttk.Combobox(self.guide, width=52)
-        self.cloud_comb = ttk.Combobox(self.guide, width=52)
+        self.draft_comb = ttk.Combobox(self, width=52)
+        self.cache_comb = ttk.Combobox(self, width=52)
+        self.cloud_comb = ttk.Combobox(self, width=52)
         self.combs = [self.draft_comb, self.cache_comb, self.cloud_comb]
         # 第三列按钮的初始化及捆绑，使用lambda表达式实现传参
         self.draft_button = tk.Button(text='选择路径',
@@ -59,12 +60,17 @@ class Guide:
                                       state=tk.DISABLED)
         self.buttons = [self.draft_button, self.cache_button, self.cloud_button]
         # 一些单独的组件
-        self.message = tk.Label(self.guide)
+        self.message = tk.Label(self)
         self.message.grid(row=0, column=0, columnspan=3, padx=5, pady=10)
-        self.progress_bar = ttk.Progressbar(self.guide, length=540, mode='indeterminate', orient=tk.HORIZONTAL)
+        self.progress_bar = ttk.Progressbar(self, length=540, mode='indeterminate', orient=tk.HORIZONTAL)
         self.progress_bar.grid(row=4, column=0, columnspan=3, padx=5, pady=10)
-        self.submit_button = tk.Button(self.guide, text='下一步>>>', state=tk.DISABLED, padx=40, command=self.submit)
-        self.submit_button.grid(row=5, column=1)
+        bt_frame = tk.Frame(self, width=255, height=20)
+        self.submit_button = tk.Button(bt_frame, text='下一步>>>', state=tk.DISABLED, width=30, command=self.submit)
+        self.submit_button.grid(row=0, column=1, padx=10)
+        self.auto_button = tk.Button(bt_frame, text='自动搜索', width=30,
+                                     command=lambda: _thread.start_new_thread(self.auto_search, (15, )))
+        self.auto_button.grid(row=0, column=0, padx=10)
+        bt_frame.grid(row=5, column=0, columnspan=3)
         # 批量布局标签、组合框、按钮
         for i in range(3):
             labels[i].grid(row=i + 1, column=0, pady=5, sticky='e')
@@ -74,8 +80,8 @@ class Guide:
         thread = threading.Thread(target=self.is_have, args=(30,))
         thread.start()
         # 窗口基本参数
-        self.guide.resizable(False, False)
-        self.guide.mainloop()
+        self.resizable(False, False)
+        self.mainloop()
 
     def is_have(self, speed: int = 5):
         self.update_comb(speed)
@@ -106,11 +112,6 @@ class Guide:
 
     def auto_search(self, is_show: bool = False):
         disk_infor = psutil.disk_partitions(all=False)
-        rule = [
-            [r'.*\\JianyingPro Drafts$', r'.*\\com[.]lveditor[.]draft$', ],
-            [r'.*\\JianyingPro\\User Data\\Cache$', ],
-            [r'.*\\JianyingPro\\(\d|[.])*\\Resources$', r'.*\\JianyingPro\\Apps\\(\d|[.])*\\Resources$']
-        ]
         i = 0  # 遍历计数单位
         for item in disk_infor:
             # disk_info原来都是一个partitions对象，这里为了类型兼容，强制转换为list
@@ -119,26 +120,26 @@ class Guide:
                 if is_show:
                     self.message.config(text='已查找{}个文件，正在检查{}...'.format(i, super_path)[:50] + '...')
                 for j in range(3):
-                    for key in rule[j]:
-                        if re.match(key, super_path):
-                            self.p.paths[j].insert(0, super_path)
-                            self.p.paths[j] = list(dict.fromkeys(self.p.paths[j]))
+                    if public.is_match(super_path, j):
+                        self.p.paths[j].insert(0, super_path)
+                        self.p.paths[j] = list(dict.fromkeys(self.p.paths[j]))
+        self.message.config(text='自动查找完毕')
         # 自动搜索就是依次遍历，不会出现重复，不需要去重
         self.p.write_path()
 
     def manual_search(self, path_name: str, position: int):
-        select = False
-        while not select:
-            item = filedialog.askdirectory(parent=self.guide, title='选取{}路径'.format(path_name))
-            if item != '':  # 防止连续按取消接空
+        path_call = ['Draft', 'Cache', 'Resources']
+        item = filedialog.askdirectory(parent=self, title='选取{}路径'.format(path_name))
+        if pl.Path(item).is_dir():
+            if public.is_match(item, position):
                 self.p.paths[position].insert(0, item)
-            self.p.paths[position] = list(dict.fromkeys(self.p.paths[position]))
-            if len(item) == 0:
-                select = not messagebox.askretrycancel('未选中', '未选中任何目录')
+                self.p.paths[position] = list(dict.fromkeys(self.p.paths[position]))
+                self.update_comb()
             else:
-                select = True
-
-        self.update_comb()
+                messagebox.showwarning(title='路径错误',
+                                       message='您输入的{}路径有误，\n请重新选择！'.format(path_call[position]))
+        else:
+            messagebox.askretrycancel('未选中', '未选中任何目录')
 
     def update_comb(self, speed: int = 5):
         is_path = True
@@ -149,7 +150,7 @@ class Guide:
             else:
                 self.combs[i].config(values=('等待输入路径...',))
             self.combs[i].current(0)  # 显示最新的选项
-            is_path = is_path and Path(self.combs[i].get()).is_dir()
+            is_path = is_path and pl.Path(self.combs[i].get()).is_dir() and self.combs[i].get() != ''
         # 路经检查全部通过则给个进度提示
         if is_path:
             self.progress_bar.stop()
@@ -164,25 +165,40 @@ class Guide:
         self.progress_bar.config(mode="determinate")
         for i in range(100 // speed + 1):
             self.progress_bar['value'] += speed
-            self.guide.update()
+            self.update()
             time.sleep(0.1)
 
     def submit(self):
-        # self.submit_button.config(state=tk.DISABLED)
+        path_call = ['Draft', 'Cache', 'Resources']
+        is_correct = True
         for i in range(3):
-            if Path(self.combs[i].get()).is_dir():  # 检查输入，如果是路径
-                self.message.config(text='成功提交路径！')
-                # 如果是新路径，还要加入到类变量
-                if self.combs[i].get() in self.p.paths[i]:
-                    self.p.paths[i].remove(self.combs[i].get())
-                self.p.paths[i].insert(0, self.combs[i].get())
-                self.update_comb(15)
-                self.p.write_path()
-                workframe.WorkFrame()
+            now_path = self.combs[i].get()
+            if pl.Path(now_path).is_dir():  # 检查输入，如果是路径
+                is_correct = is_correct and public.is_match(now_path, i)
+                if public.is_match(now_path, i):
+                    # 如果是新路径，还要加入到类变量
+                    if self.combs[i].get() in self.p.paths[i]:
+                        self.p.paths[i].remove(self.combs[i].get())
+                    self.p.paths[i].insert(0, self.combs[i].get())
+                else:
+                    # 只要有一个错就提示错误
+                    messagebox.showwarning(title='路径有误',
+                                           message='您输入的{}路径有误，\n请重新选择！'.format(path_call[i]))
+                    break
             else:
                 # 只要有一个错就提示错误
-                self.message.config(text='请确认你的输入是否完整无误！')
+                messagebox.showwarning(title='路径有误',
+                                       message='请确认你输入的{}路径是否存在！'.format(path_call[i]))
                 break
+        if is_correct:
+            self.update_comb(15)
+            self.p.write_path()
+            self.w = workframe.WorkFrame(self)
+            # 以下代码并未起到作用，原因不明
+            self.w.transient(self)
+            self.w.focus_set()
+            self.w.grab_set()
+            self.wait_window(self.w)
+            self.message.config(text='路径提交成功！')
 
-
-g = Guide()
+# g = Guide()
