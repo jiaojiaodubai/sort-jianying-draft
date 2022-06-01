@@ -19,18 +19,19 @@ class Guide:
     draft_comb: ttk.Combobox
     cache_comb: ttk.Combobox
     cloud_comb: ttk.Combobox
-    combs = []
+    combs = [tk.ttk.Combobox]
     draft_button: tk.Button
     cache_button: tk.Button
     cloud_button: tk.Button
-    buttons = []
+    buttons = [tk.Button]
     progress_bar: ttk.Progressbar
     submit_button: tk.Button
     p = public.PathManager()
 
     def __init__(self):
         self.guide = tk.Tk()
-        with open('tmp.ico', 'wb') as tmp:
+        # with open会自动帮我们关闭文件，不需要手动关闭
+        with open('tmp.ico', 'wb') as tmp:  # wb表示以覆盖写模式、二进制方式打开文件
             tmp.write(base64.b64decode(public.img))
         self.guide.iconbitmap('tmp.ico')
         os.remove('tmp.ico')
@@ -39,7 +40,7 @@ class Guide:
         # 第一列标签的初始化及捆绑
         draft_path_label = tk.Label(self.guide, text='Draft路径：')
         cache_path_label = tk.Label(self.guide, text='Cache路径：')
-        cloud_path_label = tk.Label(self.guide, text='安装源路径：')
+        cloud_path_label = tk.Label(self.guide, text='Resources路径：')
         labels = [draft_path_label, cache_path_label, cloud_path_label]
         # 第二列输入框的初始化及捆绑
         self.draft_comb = ttk.Combobox(self.guide, width=52)
@@ -54,7 +55,7 @@ class Guide:
                                       command=lambda: self.manual_search('Cache', 1),
                                       state=tk.DISABLED)
         self.cloud_button = tk.Button(text='选择路径',
-                                      command=lambda: self.manual_search('安装源', 2),
+                                      command=lambda: self.manual_search('Resources', 2),
                                       state=tk.DISABLED)
         self.buttons = [self.draft_button, self.cache_button, self.cloud_button]
         # 一些单独的组件
@@ -66,7 +67,7 @@ class Guide:
         self.submit_button.grid(row=5, column=1)
         # 批量布局标签、组合框、按钮
         for i in range(3):
-            labels[i].grid(row=i + 1, column=0, pady=5)
+            labels[i].grid(row=i + 1, column=0, pady=5, sticky='e')
             self.combs[i].grid(row=i + 1, column=1, pady=5)
             self.buttons[i].grid(row=i + 1, column=2, pady=5)
         # 执行窗体功能
@@ -129,7 +130,7 @@ class Guide:
         select = False
         while not select:
             item = filedialog.askdirectory(parent=self.guide, title='选取{}路径'.format(path_name))
-            if item != '':    # 防止连续按取消接空
+            if item != '':  # 防止连续按取消接空
                 self.p.paths[position].insert(0, item)
             self.p.paths[position] = list(dict.fromkeys(self.p.paths[position]))
             if len(item) == 0:
@@ -159,6 +160,7 @@ class Guide:
 
     # 秀一下进度条给个安慰
     def ok_progress(self, speed: int = 5):
+        # 变为单向进度条
         self.progress_bar.config(mode="determinate")
         for i in range(100 // speed + 1):
             self.progress_bar['value'] += speed
@@ -180,6 +182,7 @@ class Guide:
             else:
                 # 只要有一个错就提示错误
                 self.message.config(text='请确认你的输入是否完整无误！')
-                self.submit_button.config(state=tk.NORMAL)
                 break
-        # 检查不检查什么的不重要，主要是更新一下组合框选项，并给一个安慰进度条
+
+
+g = Guide()
