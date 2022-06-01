@@ -166,7 +166,7 @@ class PackDraft(tk.Frame):
                         # TODO:这里有风险，优势会有重名文件覆盖
                 if self.val2.get() == 1:
                     self.message.config(text='正在压缩单文件...')
-                    shutil.make_archive(filepath, 'zip', self.export_path[0])
+                    shutil.make_archive(filepath, 'zip', filepath)
                     shutil.rmtree(filepath)
                     self.message.config(text='草稿文件创建成功！')
                 if self.val3.get() == 1:

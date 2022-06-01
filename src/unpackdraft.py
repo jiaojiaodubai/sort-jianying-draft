@@ -1,6 +1,7 @@
 import configparser
 import os
 import pathlib
+import shutil
 import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -17,10 +18,12 @@ class UnpackDraft(tk.Frame):
     meta_target: list
     val1: tk.BooleanVar
     val2: tk.BooleanVar
+    val3: tk.BooleanVar
     draft_comb: ttk.Combobox
     meta_comb: ttk.Combobox
     is_only: tk.Checkbutton
     is_save: tk.Checkbutton
+    is_remember: tk.Checkbutton
     message: tk.Label
     import_button: tk.Button
 
@@ -45,7 +48,7 @@ class UnpackDraft(tk.Frame):
         export_choose = tk.Button(self, text='选择路径', command=self.choose_meta_target)
         export_choose.grid(row=1, column=3, pady=5, padx=5)
         box_frame = tk.Frame(self, width=520, height=20)
-        self.val1, self.val2 = tk.BooleanVar(), tk.BooleanVar()
+        self.val1, self.val2, self.val3 = tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar()
         # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.configer.read('config.ini', encoding='utf-8')
         if self.p.configer.has_section('unpack_setting'):
@@ -53,15 +56,19 @@ class UnpackDraft(tk.Frame):
                 self.val1.set(eval(self.p.configer.get('unpack_setting', 'is_only')))
             if self.p.configer.has_option('unpack_setting', 'is_save'):
                 self.val2.set(eval(self.p.configer.get('unpack_setting', 'is_save')))
+            if self.p.configer.has_option('unpack_setting', 'is_remember'):
+                self.val3.set(self.p.configer.get('unpack_setting', 'is_remember'))
             if self.p.configer.has_option('unpack_setting', 'import_path'):
                 self.import_path.insert(0, self.p.configer.get('unpack_setting', 'import_path'))
         else:
             self.p.configer.add_section('unpack_setting')
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        is_only = tk.Checkbutton(box_frame, text='仅导入索引', variable=self.val1, padx=20)
+        is_only = tk.Checkbutton(box_frame, text='仅导入索引', variable=self.val1, padx=10)
         is_only.grid(row=0, column=0)
-        is_zip = tk.Checkbutton(box_frame, text='保存素材路径', variable=self.val2, padx=20)
-        is_zip.grid(row=0, column=1)
+        is_save = tk.Checkbutton(box_frame, text='保存打开路径', variable=self.val2, padx=10)
+        is_save.grid(row=0, column=1)
+        is_remember = tk.Checkbutton(box_frame, text='记住打开路径', variable=self.val3, padx=10)
+        is_remember.grid(row=0, column=2)
         box_frame.grid(row=2, column=0, columnspan=4)
         self.export_button = tk.Button(self, text='一键导入', padx=40,
                                        command=lambda: threading.Thread(target=self._import).start(),
@@ -153,6 +160,9 @@ class UnpackDraft(tk.Frame):
                     if self.val1.get() != 1:
                         if os.path.exists(meta_path):
                             public.win32_shell_copy(meta_path, self.meta_target[0])
+                            # FileExistsError: [WinError 183] 当文件已存在时，无法创建该文件。
+                            if os.path.exists('{}/{}'.format(self.meta_target[0], os.path.basename(draft))):
+                                shutil.rmtree('{}/{}'.format(self.meta_target[0], os.path.basename(draft)))
                             os.rename('{}/meta'.format(self.meta_target[0]),
                                       '{}/{}'.format(self.meta_target[0], os.path.basename(draft)))
                         else:

@@ -9,8 +9,11 @@ from tkinter import filedialog
 import threading
 import public
 import psutil
-
 import workframe
+
+'''
+https://stackoverflow.com/questions/24885827/python-tkinter-how-can-i-ensure-only-one-child-window-is-created-onclick-and-no
+'''
 
 
 class Guide(tk.Tk):
