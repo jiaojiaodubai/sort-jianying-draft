@@ -23,7 +23,6 @@ class UnpackDraft(tk.Frame):
     meta_comb: ttk.Combobox
     is_only: tk.Checkbutton
     is_save: tk.Checkbutton
-    is_remember: tk.Checkbutton
     message: tk.Label
     import_button: tk.Button
 
@@ -48,7 +47,7 @@ class UnpackDraft(tk.Frame):
         export_choose = tk.Button(self, text='选择路径', command=self.choose_meta_target)
         export_choose.grid(row=1, column=3, pady=5, padx=5)
         box_frame = tk.Frame(self, width=520, height=20)
-        self.val1, self.val2, self.val3 = tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar()
+        self.val1, self.val2 = tk.BooleanVar(), tk.BooleanVar()
         # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.configer.read('config.ini', encoding='utf-8')
         if self.p.configer.has_section('unpack_setting'):
@@ -56,8 +55,6 @@ class UnpackDraft(tk.Frame):
                 self.val1.set(eval(self.p.configer.get('unpack_setting', 'is_only')))
             if self.p.configer.has_option('unpack_setting', 'is_save'):
                 self.val2.set(eval(self.p.configer.get('unpack_setting', 'is_save')))
-            if self.p.configer.has_option('unpack_setting', 'is_remember'):
-                self.val3.set(self.p.configer.get('unpack_setting', 'is_remember'))
             if self.p.configer.has_option('unpack_setting', 'import_path'):
                 self.import_path.insert(0, self.p.configer.get('unpack_setting', 'import_path'))
         else:
@@ -189,5 +186,6 @@ class UnpackDraft(tk.Frame):
             self.message.config(text='草稿选择完毕！')
             return True
         else:
+            # 已完成草稿特征检查和非空检查，不需要再更改
             messagebox.showwarning(title='操作有误', message='未找到草稿文件！')
             return False
