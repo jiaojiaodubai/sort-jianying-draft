@@ -13,6 +13,7 @@ import psutil
 import workframe
 
 '''
+这是本程序打开后的引导窗口，用于获取草稿路径、缓存路径、内置素材路径
 https://stackoverflow.com/questions/24885827/python-tkinter-how-can-i-ensure-only-one-child-window-is-created-onclick-and-no
 '''
 
@@ -22,11 +23,11 @@ class Guide(tk.Tk):
     draft_comb: ttk.Combobox
     cache_comb: ttk.Combobox
     cloud_comb: ttk.Combobox
-    combs = [tk.ttk.Combobox]
+    combs = [tk.ttk.Combobox]  # 把复选框绑定起来
     draft_button: tk.Button
     cache_button: tk.Button
     cloud_button: tk.Button
-    buttons = [tk.Button]
+    buttons = [tk.Button]  # 把按钮绑定起来
     progress_bar: ttk.Progressbar
     submit_button: tk.Button
     p = public.PathManager()
@@ -37,12 +38,12 @@ class Guide(tk.Tk):
         self.w = None
         # with open会自动帮我们关闭文件，不需要手动关闭
         with open('tmp.ico', 'wb') as tmp:  # wb表示以覆盖写模式、二进制方式打开文件
-            tmp.write(base64.b64decode(public.img))
+            tmp.write(base64.b64decode(public.img))  # 通过base64的decode解码图标文件
         self.iconbitmap('tmp.ico')
         os.remove('tmp.ico')
         self.title('导入路径')
         self.geometry('560x255+300+250')
-        self.config(padx=5)
+        self.config(padx=5)  # 5px的边缘不至于太拥挤
         # 第一列标签的初始化及捆绑
         draft_path_label = tk.Label(self, text='Draft路径：')
         cache_path_label = tk.Label(self, text='Cache路径：')
@@ -69,10 +70,12 @@ class Guide(tk.Tk):
         self.message.grid(row=0, column=0, columnspan=3, padx=5, pady=10)
         self.progress_bar = ttk.Progressbar(self, length=540, mode='indeterminate', orient=tk.HORIZONTAL)
         self.progress_bar.grid(row=4, column=0, columnspan=3, padx=5, pady=10)
+        # 通过采用frame容器重新打包，完成按钮之间的对齐
         bt_frame = tk.Frame(self, width=255, height=20)
         self.submit_button = tk.Button(bt_frame, text='下一步>>>', state=tk.DISABLED, width=30, command=self.submit)
         self.submit_button.grid(row=0, column=1, padx=10)
         self.auto_button = tk.Button(bt_frame, text='自动搜索', width=30,
+                                     # 注意此处lambda表达式的写法，因为开启线程要求必须传入参数，因此选定了一个不痛不痒的速度参数
                                      command=lambda: _thread.start_new_thread(self.auto_search, (15, )))
         self.auto_button.grid(row=0, column=0, padx=10)
         bt_frame.grid(row=5, column=0, columnspan=3)
@@ -83,6 +86,7 @@ class Guide(tk.Tk):
             self.buttons[i].grid(row=i + 1, column=2, pady=5)
         pids = psutil.pids()
         for pid in pids:
+            # 由于pid是动态分配的，因此通过程序名称来定位进程更合理
             if psutil.Process(pid).name() == 'JianyingPro.exe':
                 messagebox.showerror(title='遇到异常', message='检测到剪映正在后台运行，\n请关闭剪映后重新启动本程序！')
                 sys.exit()
@@ -94,7 +98,7 @@ class Guide(tk.Tk):
         self.mainloop()
 
     def is_have(self, speed: int = 5):
-        self.update_comb(speed)
+        self.update_comb(speed)  # 第一次update时为了显示历史记录或者提示语句
         self.message.config(text='正在读取历史记录...')
         self.progress_bar.start()
         # 检查历史记录
@@ -103,7 +107,7 @@ class Guide(tk.Tk):
                 self.message.config(text='正在自动搜索...')
                 thread = threading.Thread(target=self.auto_search, args=(True,))
                 thread.start()
-                thread.join()
+                thread.join()  # 主线程等待子线程结束后才结束
                 self.message.config(text='已完成路径检索！')
             else:
                 self.message.config(text='请点击相应按钮来选取路径...')
@@ -128,10 +132,12 @@ class Guide(tk.Tk):
             for super_path, sub_path, sub_files in os.walk(list(item)[1]):
                 i += 1
                 if is_show:
+                    # 限制为显示50个字符，太多了显示不完
                     self.message.config(text='已查找{}个文件，正在检查{}...'.format(i, super_path)[:50] + '...')
                 for j in range(3):
                     if public.is_match(super_path, j):
                         self.p.paths[j].insert(0, super_path)
+                        # 实现在不改变列表顺序的情况下，以原来的次序作为键值进行去重
                         self.p.paths[j] = list(dict.fromkeys(self.p.paths[j]))
         self.message.config(text='自动查找完毕')
         # 自动搜索就是依次遍历，不会出现重复，不需要去重
@@ -141,6 +147,7 @@ class Guide(tk.Tk):
         path_call = ['Draft', 'Cache', 'Resources']
         item = filedialog.askdirectory(parent=self, title='选取{}路径'.format(path_name))
         if pl.Path(item).is_dir():
+            # 采用自定义方法判断是否复合路径的特定规则
             if public.is_match(item, position):
                 self.p.paths[position].insert(0, item)
                 self.p.paths[position] = list(dict.fromkeys(self.p.paths[position]))
@@ -160,6 +167,7 @@ class Guide(tk.Tk):
             else:
                 self.combs[i].config(values=('等待输入路径...',))
             self.combs[i].current(0)  # 显示最新的选项
+            # Python似乎会把空字符串视为路径，因此要加以排除
             is_path = is_path and pl.Path(self.combs[i].get()).is_dir() and self.combs[i].get() != ''
         # 路经检查全部通过则给个进度提示
         if is_path:
@@ -204,7 +212,7 @@ class Guide(tk.Tk):
             self.update_comb(15)
             self.p.write_path()
             self.w = workframe.WorkFrame(self)
-            # 以下代码并未起到作用，原因不明
+            # 以下代码的作用是使workframe窗口仅有一个，且打开workframe时不允许过多操作主窗口
             self.w.transient(self)
             self.w.focus_set()
             self.w.grab_set()

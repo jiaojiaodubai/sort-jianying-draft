@@ -6,6 +6,7 @@ import threading
 import time
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+# 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
 import win32com.client
 import public
 
@@ -23,6 +24,7 @@ class PackDraft(tk.Frame):
     is_share: tk.Checkbutton
     is_open: tk.Checkbutton
     is_remember: tk.Checkbutton
+    # tk独有的布尔值，对应0和1，表示复选框的选择状态
     val1: tk.BooleanVar
     val2: tk.BooleanVar
     val3: tk.BooleanVar
@@ -49,7 +51,9 @@ class PackDraft(tk.Frame):
         self.val1, self.val2, self.val3, self.val4 = tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar()
         # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.configer.read('config.ini', encoding='utf-8')
+        # 读取预置
         if self.p.configer.has_section('pack_setting'):
+            # 必须判断再get，否则没有配置项时将出错
             if self.p.configer.has_option('pack_setting', 'is_only'):
                 self.val1.set(eval(self.p.configer.get('pack_setting', 'is_only')))
             if self.p.configer.has_option('pack_setting', 'is_zip'):
@@ -104,9 +108,9 @@ class PackDraft(tk.Frame):
                                                    initialdir=r'.\draft-preview',
                                                    filetypes=[('快捷方式', '*.lnk *link')]
                                                    )
-        one_todo = []
+        one_todo = []  # 一次可能选中多个
         for link in links_select:
-            if pl.PurePath(link).parent == pl.Path(r'.\draft-preview').resolve():
+            if pl.PurePath(link).parent == pl.Path(r'.\draft-preview').resolve():  # resolve返回绝对路径
                 one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
                 self.drafts_todo.insert(0, tuple(one_todo))
                 self.draft_comb.config(values=public.names2name(self.drafts_todo))
@@ -163,7 +167,7 @@ class PackDraft(tk.Frame):
                     # 复制的是文件，则复制后也应当是文件
                     for path in self.p.paths[3]:
                         public.win32_shell_copy(path, '{}\\meta\\{}'.format(filepath, os.path.basename(path)))
-                        # TODO:这里有风险，优势会有重名文件覆盖
+                        # TODO:这里有风险，有时会有重名文件覆盖
                 if self.val2.get() == 1:
                     self.message.config(text='正在压缩单文件...')
                     shutil.make_archive(filepath, 'zip', filepath)

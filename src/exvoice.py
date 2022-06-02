@@ -144,6 +144,7 @@ class ExVoice(tk.Frame):
                     for audio in self.audios:
                         public.win32_shell_copy(audio.get('path'),
                                                 '{}\\{}-{}-{}.wav'.format(filepath,
+                                                                          # 序号既能防止重复，也能标示先后顺序
                                                                           audio.get('serial'),
                                                                           audio.get('txt'),
                                                                           audio.get('tune')
