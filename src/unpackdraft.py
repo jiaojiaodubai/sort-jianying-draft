@@ -27,7 +27,7 @@ class UnpackDraft(tk.Frame):
     import_button: tk.Button
 
     def __init__(self, parent, label):
-        super().__init__(parent, width=520, height=150)
+        super().__init__(parent, width=560, height=155)
         self.draft_target = self.p.paths[0][0]
         self.meta_target = ['{}/metas'.format(self.p.paths[1][0]), ]
         draft_label = tk.Label(self, text='已选草稿：')
@@ -64,8 +64,6 @@ class UnpackDraft(tk.Frame):
         is_only.grid(row=0, column=0)
         is_save = tk.Checkbutton(box_frame, text='保存打开路径', variable=self.val2, padx=10)
         is_save.grid(row=0, column=1)
-        is_remember = tk.Checkbutton(box_frame, text='记住打开路径', variable=self.val3, padx=10)
-        is_remember.grid(row=0, column=2)
         box_frame.grid(row=2, column=0, columnspan=4)
         self.export_button = tk.Button(self, text='一键导入', padx=40,
                                        command=lambda: threading.Thread(target=self._import).start(),

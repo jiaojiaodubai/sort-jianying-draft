@@ -2,6 +2,7 @@ import _thread
 import base64
 import os
 import pathlib as pl
+import sys
 import time
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -17,7 +18,6 @@ https://stackoverflow.com/questions/24885827/python-tkinter-how-can-i-ensure-onl
 
 
 class Guide(tk.Tk):
-    guide: tk.Tk
     message: tk.Label
     draft_comb: ttk.Combobox
     cache_comb: ttk.Combobox
@@ -33,14 +33,16 @@ class Guide(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        # with open会自动帮我们关闭文件，不需要手动关闭
+        self.resizable(False, False)
         self.w = None
+        # with open会自动帮我们关闭文件，不需要手动关闭
         with open('tmp.ico', 'wb') as tmp:  # wb表示以覆盖写模式、二进制方式打开文件
             tmp.write(base64.b64decode(public.img))
         self.iconbitmap('tmp.ico')
         os.remove('tmp.ico')
         self.title('导入路径')
-        self.geometry('550x255+300+250')
+        self.geometry('560x255+300+250')
+        self.config(padx=5)
         # 第一列标签的初始化及捆绑
         draft_path_label = tk.Label(self, text='Draft路径：')
         cache_path_label = tk.Label(self, text='Cache路径：')
@@ -79,11 +81,16 @@ class Guide(tk.Tk):
             labels[i].grid(row=i + 1, column=0, pady=5, sticky='e')
             self.combs[i].grid(row=i + 1, column=1, pady=5)
             self.buttons[i].grid(row=i + 1, column=2, pady=5)
+        pids = psutil.pids()
+        for pid in pids:
+            if psutil.Process(pid).name() == 'JianyingPro.exe':
+                messagebox.showerror(title='遇到异常', message='检测到剪映正在后台运行，\n请关闭剪映后重新启动本程序！')
+                sys.exit()
+        # 不要把主功能和loop加入到else子句，否则会出现意外（因为找不到loop）
         # 执行窗体功能
         thread = threading.Thread(target=self.is_have, args=(30,))
         thread.start()
         # 窗口基本参数
-        self.resizable(False, False)
         self.mainloop()
 
     def is_have(self, speed: int = 5):

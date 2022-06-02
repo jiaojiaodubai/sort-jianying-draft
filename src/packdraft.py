@@ -30,7 +30,7 @@ class PackDraft(tk.Frame):
     shells = win32com.client.Dispatch("WScript.Shell")
 
     def __init__(self, parent, label):
-        super().__init__(parent, width=520, height=150)
+        super().__init__(parent, width=560, height=155)
         draft_label = tk.Label(self, text='已选草稿：')
         export_label = tk.Label(self, text='导出路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
