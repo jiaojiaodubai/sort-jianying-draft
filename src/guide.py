@@ -74,7 +74,9 @@ class Guide(tk.Tk):
         bt_frame = tk.Frame(self, width=255, height=20)
         self.submit_button = tk.Button(bt_frame, text='下一步>>>', state=tk.DISABLED, width=30, command=self.submit)
         self.submit_button.grid(row=0, column=1, padx=10)
-        self.auto_button = tk.Button(bt_frame, text='自动搜索', width=30,
+        self.auto_button = tk.Button(bt_frame, text='自动搜索',
+                                     width=30,
+                                     state=tk.DISABLED,
                                      # 注意此处lambda表达式的写法，因为开启线程要求必须传入参数，因此选定了一个不痛不痒的速度参数
                                      command=lambda: _thread.start_new_thread(self.auto_search, (15, )))
         self.auto_button.grid(row=0, column=0, padx=10)
@@ -123,6 +125,7 @@ class Guide(tk.Tk):
             self.combs[i].config(state=tk.NORMAL)
             self.buttons[i].config(state=tk.NORMAL)
         self.submit_button.config(state=tk.NORMAL)
+        self.auto_button.config(state=tk.NORMAL)
 
     def auto_search(self, is_show: bool = False):
         disk_infor = psutil.disk_partitions(all=False)
