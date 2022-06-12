@@ -1,54 +1,55 @@
-import json
-import os
-import shutil
-import pathlib as pl
-import threading
-import time
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from json import load
+from os import startfile
+from os.path import isdir, exists, basename, split, abspath
+from shutil import make_archive, rmtree
+from pathlib import Path, PurePath
+from threading import Thread
+from time import strftime, localtime
+from tkinter import Frame, Label, Checkbutton, Button, filedialog, messagebox, BooleanVar
+from tkinter.ttk import Combobox
 # 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
-import win32com.client
-import public
+from win32com.client import Dispatch
+from public import PathManager, names2name, win32_shell_copy
 
 
-class PackDraft(tk.Frame):
-    p = public.PathManager()
+class PackDraft(Frame):
+    p = PathManager()
     drafts_origin = []
     drafts_todo = []
     export_path = [p.DESKTOP, ]
-    draft_comb: ttk.Combobox
-    export_comb: ttk.Combobox
-    message: tk.Label
-    export_button: tk.Button
-    is_zip: tk.Checkbutton
-    is_share: tk.Checkbutton
-    is_open: tk.Checkbutton
-    is_remember: tk.Checkbutton
+    draft_comb: Combobox
+    export_comb: Combobox
+    message: Label
+    export_button: Button
+    is_zip: Checkbutton
+    is_share: Checkbutton
+    is_open: Checkbutton
+    is_remember: Checkbutton
     # tk独有的布尔值，对应0和1，表示复选框的选择状态
-    val1: tk.BooleanVar
-    val2: tk.BooleanVar
-    val3: tk.BooleanVar
-    val4: tk.BooleanVar
-    shells = win32com.client.Dispatch("WScript.Shell")
+    val1: BooleanVar
+    val2: BooleanVar
+    val3: BooleanVar
+    val4: BooleanVar
+    shells = Dispatch("WScript.Shell")
 
     def __init__(self, parent, label):
         super().__init__(parent, width=560, height=155)
-        draft_label = tk.Label(self, text='已选草稿：')
-        export_label = tk.Label(self, text='导出路径：')
+        draft_label = Label(self, text='已选草稿：')
+        export_label = Label(self, text='导出路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
         export_label.grid(row=1, column=0, pady=10, padx=5)
-        self.draft_comb = ttk.Combobox(self, width=51, state='readonly')
+        self.draft_comb = Combobox(self, width=51, state='readonly')
         self.draft_comb.grid(row=0, column=1, columnspan=2, pady=10, padx=5)
-        self.export_comb = ttk.Combobox(self, width=51)
+        self.export_comb = Combobox(self, width=51)
         self.export_comb.grid(row=1, column=1, columnspan=2, pady=10, padx=5)
         self.export_comb.config(values=self.export_path)
         self.export_comb.current(0)
-        draft_choose = tk.Button(self, text='选取草稿', command=self.choose_draft)
+        draft_choose = Button(self, text='选取草稿', command=self.choose_draft)
         draft_choose.grid(row=0, column=3, pady=5, padx=5)
-        export_choose = tk.Button(self, text='选择路径', command=self.choose_export)
+        export_choose = Button(self, text='选择路径', command=self.choose_export)
         export_choose.grid(row=1, column=3, pady=5, padx=5)
-        box_frame = tk.Frame(self, width=520, height=20)
-        self.val1, self.val2, self.val3, self.val4 = tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar()
+        box_frame = Frame(self, width=520, height=20)
+        self.val1, self.val2, self.val3, self.val4 = BooleanVar(), BooleanVar(), BooleanVar(), BooleanVar()
         # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.configer.read('config.ini', encoding='utf-8')
         # 读取预置
@@ -69,18 +70,18 @@ class PackDraft(tk.Frame):
         else:
             self.p.configer.add_section('pack_setting')
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        is_only = tk.Checkbutton(box_frame, text='仅导出索引', variable=self.val1)
+        is_only = Checkbutton(box_frame, text='仅导出索引', variable=self.val1)
         is_only.grid(row=0, column=0)
-        is_zip = tk.Checkbutton(box_frame, text='打包为单文件', variable=self.val2)
+        is_zip = Checkbutton(box_frame, text='打包为单文件', variable=self.val2)
         is_zip.grid(row=0, column=1)
-        is_open = tk.Checkbutton(box_frame, text='完成后打开文件', variable=self.val3)
+        is_open = Checkbutton(box_frame, text='完成后打开文件', variable=self.val3)
         is_open.grid(row=0, column=2)
-        is_remember = tk.Checkbutton(box_frame, text='记住导出路径', variable=self.val4)
+        is_remember = Checkbutton(box_frame, text='记住导出路径', variable=self.val4)
         is_remember.grid(row=0, column=3)
         box_frame.grid(row=2, column=0, columnspan=4)
-        self.export_button = tk.Button(self, text='一键导出', padx=40,
-                                       command=lambda: threading.Thread(target=self.export).start(),
-                                       )
+        self.export_button = Button(self, text='一键导出', padx=40,
+                                    command=lambda: Thread(target=self.export).start(),
+                                    )
         self.export_button.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
         self.message = label
         self.p.collect_draft()
@@ -92,7 +93,7 @@ class PackDraft(tk.Frame):
                                               initialdir=self.p.DESKTOP,
                                               )
         # 不要把工程导出到原工程路径，否则会引发困扰
-        if os.path.isdir(select_temp) and select_temp not in self.p.paths[1]:
+        if isdir(select_temp) and select_temp not in self.p.paths[1]:
             self.export_path.insert(0, select_temp)
             self.export_comb.config(values=self.export_path)
             self.export_comb.current(0)
@@ -110,10 +111,10 @@ class PackDraft(tk.Frame):
                                                    )
         one_todo = []  # 一次可能选中多个
         for link in links_select:
-            if pl.PurePath(link).parent == pl.Path(r'.\draft-preview').resolve():  # resolve返回绝对路径
+            if PurePath(link).parent == Path(r'.\draft-preview').resolve():  # resolve返回绝对路径
                 one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
                 self.drafts_todo.insert(0, tuple(one_todo))
-                self.draft_comb.config(values=public.names2name(self.drafts_todo))
+                self.draft_comb.config(values=names2name(self.drafts_todo))
                 self.draft_comb.current(0)
                 self.message.config(text='草稿选取完毕！')
             else:
@@ -125,24 +126,24 @@ class PackDraft(tk.Frame):
         self.p.paths[3].clear()
         self.p.paths[4].clear()
         with open('{}\\draft_meta_info.json'.format(draft_path), 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            data = load(f)
             meta_temp = data.pop('draft_materials')
             meta_dic = meta_temp[0]
             meta_list = meta_dic.pop('value')
             for item in meta_list:
                 path = item.pop('file_Path')
-                if os.path.exists(path):
+                if exists(path):
                     # 这些路径仅用于替换，因此顺序不重要，直接用了append
                     self.p.paths[3].append(path)
-                    self.p.paths[4].append(os.path.split(path)[0])
+                    self.p.paths[4].append(split(path)[0])
         self.p.paths[4] = list(set(self.p.paths[4]))
         self.p.write_path()
         # 必须及时关闭，否则f时刻被占用，不可替换内部资源
         f.close()
 
     def export(self):
-        # os.path.isdir(self.export_comb.get())防止选择拿空，self.draft_comb.get() in self.todo_history防止不选直接按空
-        if os.path.isdir(self.export_comb.get()) and self.draft_comb.get() in public.names2name(self.drafts_todo):
+        # isdir(self.export_comb.get())防止选择拿空，self.draft_comb.get() in self.todo_history防止不选直接按空
+        if isdir(self.export_comb.get()) and self.draft_comb.get() in names2name(self.drafts_todo):
             self.p.read_path()
             self.message.config(text='正在打包...')
             # 写入导出路径
@@ -155,26 +156,26 @@ class PackDraft(tk.Frame):
             self.p.configer.set('pack_setting', 'is_open', str(self.val3.get()))
             self.p.configer.set('pack_setting', 'is_remember', str(self.val4.get()))
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-            for draft in self.drafts_todo[public.names2name(self.drafts_todo).index(self.draft_comb.get())]:
+            for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
                 # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
-                suffix = time.strftime('%m.%d.%H-%M-%S', time.localtime())
-                filepath = '{}/{}-收集的草稿-{}'.format(self.export_path[0], os.path.basename(draft), suffix)
+                suffix = strftime('%m.%d.%H-%M-%S', localtime())
+                filepath = '{}/{}-收集的草稿-{}'.format(self.export_path[0], basename(draft), suffix)
                 self.analyse_meta(draft)
-                public.win32_shell_copy(draft, '{}\\{}'.format(filepath, os.path.basename(draft)))
-                public.win32_shell_copy(os.path.abspath('config.ini'), '{}\\config.ini'.format(filepath))
+                win32_shell_copy(draft, '{}\\{}'.format(filepath, basename(draft)))
+                win32_shell_copy(abspath('config.ini'), '{}\\config.ini'.format(filepath))
                 # 未选中“仅导出索引，就导出素材”
                 if self.val1.get() != 1:
                     # 复制的是文件，则复制后也应当是文件
                     for path in self.p.paths[3]:
-                        public.win32_shell_copy(path, '{}\\meta\\{}'.format(filepath, os.path.basename(path)))
+                        win32_shell_copy(path, '{}\\meta\\{}'.format(filepath, basename(path)))
                         # TODO:这里有风险，有时会有重名文件覆盖
                 if self.val2.get() == 1:
                     self.message.config(text='正在压缩单文件...')
-                    shutil.make_archive(filepath, 'zip', filepath)
-                    shutil.rmtree(filepath)
+                    make_archive(filepath, 'zip', filepath)
+                    rmtree(filepath)
                     self.message.config(text='草稿文件创建成功！')
                 if self.val3.get() == 1:
-                    os.startfile(self.export_path[0])
+                    startfile(self.export_path[0])
             self.message.config(text='草稿打包完毕！')
         else:
             messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')

@@ -1,52 +1,54 @@
-import json
-import os
-import threading
-import time
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-import win32com.client
+from json import load
+from os import mkdir
+from os.path import isdir, abspath, split, basename, exists
+from threading import Thread
+from time import strftime, localtime
+from tkinter import filedialog, messagebox, Label, Button, Checkbutton, BooleanVar, Frame
+from tkinter.ttk import Combobox
 from lxml import etree
-import public
+from win32com.client import Dispatch
+
+from src.public import PathManager, names2name, win32_shell_copy
 
 
-class ExTittle(tk.Frame):
-    p = public.PathManager()
+class ExTittle(Frame):
+    p = PathManager()
     drafts_origin = []
     drafts_todo = []
     export_path = [p.DESKTOP, ]
     texts = []
-    draft_comb: ttk.Combobox
-    export_comb: ttk.Combobox
-    message: tk.Label
-    export_button: tk.Button
-    is_zip: tk.Checkbutton
-    is_share: tk.Checkbutton
-    is_lrc: tk.Checkbutton
-    is_font: tk.Checkbutton
-    val1: tk.BooleanVar
-    val2: tk.BooleanVar
-    val3: tk.BooleanVar
-    val4: tk.BooleanVar
-    shells = win32com.client.Dispatch("WScript.Shell")
+    draft_comb: Combobox
+    export_comb: Combobox
+    message: Label
+    export_button: Button
+    is_zip: Checkbutton
+    is_share: Checkbutton
+    is_lrc: Checkbutton
+    is_font: Checkbutton
+    val1: BooleanVar
+    val2: BooleanVar
+    val3: BooleanVar
+    val4: BooleanVar
+    shells = Dispatch("WScript.Shell")
 
     def __init__(self, parent, label):
         super().__init__(parent, width=560, height=155)
-        draft_label = tk.Label(self, text='已选草稿：')
-        export_label = tk.Label(self, text='导出路径：')
+        draft_label = Label(self, text='已选草稿：')
+        export_label = Label(self, text='导出路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
         export_label.grid(row=1, column=0, pady=10, padx=5)
-        self.draft_comb = ttk.Combobox(self, width=51, state='readonly')
+        self.draft_comb = Combobox(self, width=51, state='readonly')
         self.draft_comb.grid(row=0, column=1, columnspan=2, pady=10, padx=5)
-        self.export_comb = ttk.Combobox(self, width=51)
+        self.export_comb = Combobox(self, width=51)
         self.export_comb.grid(row=1, column=1, columnspan=2, pady=10, padx=5)
         self.export_comb.config(values=self.export_path)
         self.export_comb.current(0)
-        draft_choose = tk.Button(self, text='选取草稿', command=self.choose_draft)
+        draft_choose = Button(self, text='选取草稿', command=self.choose_draft)
         draft_choose.grid(row=0, column=3, pady=5, padx=5)
-        export_choose = tk.Button(self, text='选择路径', command=self.choose_export)
+        export_choose = Button(self, text='选择路径', command=self.choose_export)
         export_choose.grid(row=1, column=3, pady=5, padx=5)
-        box_frame = tk.Frame(self, width=520, height=20)
-        self.val1, self.val2, self.val3, self.val4 = tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar()
+        box_frame = Frame(self, width=520, height=20)
+        self.val1, self.val2, self.val3, self.val4 = BooleanVar(), BooleanVar(), BooleanVar(), BooleanVar()
         # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.configer.read('config.ini', encoding='utf-8')
         if self.p.configer.has_section('extittle_setting'):
@@ -65,18 +67,18 @@ class ExTittle(tk.Frame):
         else:
             self.p.configer.add_section('extittle_setting')
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        is_srt = tk.Checkbutton(box_frame, text='导出SRT字幕', variable=self.val1)
+        is_srt = Checkbutton(box_frame, text='导出SRT字幕', variable=self.val1)
         is_srt.grid(row=0, column=0)
-        is_lrc = tk.Checkbutton(box_frame, text='导出LRC歌词', variable=self.val2)
+        is_lrc = Checkbutton(box_frame, text='导出LRC歌词', variable=self.val2)
         is_lrc.grid(row=0, column=1)
-        is_font = tk.Checkbutton(box_frame, text='连同字体导出', variable=self.val3)
+        is_font = Checkbutton(box_frame, text='连同字体导出', variable=self.val3)
         is_font.grid(row=0, column=2)
-        is_remember = tk.Checkbutton(box_frame, text='记住导出路径', variable=self.val4)
+        is_remember = Checkbutton(box_frame, text='记住导出路径', variable=self.val4)
         is_remember.grid(row=0, column=3)
         box_frame.grid(row=2, column=0, columnspan=4)
-        self.export_button = tk.Button(self, text='一键导出', padx=40,
-                                       command=lambda: threading.Thread(target=self.export).start(),
-                                       )
+        self.export_button = Button(self, text='一键导出', padx=40,
+                                    command=lambda: Thread(target=self.export).start(),
+                                    )
         self.export_button.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
         self.message = label
         self.p.collect_draft()
@@ -88,7 +90,7 @@ class ExTittle(tk.Frame):
                                               initialdir=self.p.DESKTOP,
                                               )
         # 不要把工程导出到原工程路径，否则会引发困扰
-        if os.path.isdir(select_temp) and select_temp not in self.p.paths[1]:
+        if isdir(select_temp) and select_temp not in self.p.paths[1]:
             self.export_path.insert(0, select_temp)
             self.export_comb.config(values=self.export_path)
             self.export_comb.current(0)
@@ -106,10 +108,10 @@ class ExTittle(tk.Frame):
         one_todo = []
         for link in links_select:
             # 直接split出来的斜杠方向和abspath出来的不一样，需要统一化
-            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('../draft-preview'):
+            if abspath(split(link)[0]) == abspath('../draft-preview'):
                 one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
                 self.drafts_todo.insert(0, tuple(one_todo))
-                self.draft_comb.config(values=public.names2name(self.drafts_todo))
+                self.draft_comb.config(values=names2name(self.drafts_todo))
                 self.draft_comb.current(0)
                 self.message.config(text='草稿选取完毕！')
             else:
@@ -121,7 +123,7 @@ class ExTittle(tk.Frame):
         transer = 60000000
         # 每次执行新项目就要清空上次的记录，否则记录会叠加
         with open('{}\\draft_content.json'.format(draft_path), 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            data = load(f)
             materials = data.get('materials')
             texts_temp = materials.get('texts')
             i = 1
@@ -162,11 +164,11 @@ class ExTittle(tk.Frame):
         return has_tittle
 
     def export(self):
-        # os.path.isdir(self.export_comb.get())防止选择拿空，self.draft_comb.get() in self.todo_history防止不选直接按空
-        if os.path.isdir(self.export_comb.get()) and self.draft_comb.get() in public.names2name(self.drafts_todo):
+        # isdir(self.export_comb.get())防止选择拿空，self.draft_comb.get() in self.todo_history防止不选直接按空
+        if isdir(self.export_comb.get()) and self.draft_comb.get() in names2name(self.drafts_todo):
             self.p.read_path()
             self.message.config(text='正在导出...')
-            for draft in self.drafts_todo[public.names2name(self.drafts_todo).index(self.draft_comb.get())]:
+            for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
                 have_tittle = self.analyse_meta(draft)
                 if have_tittle:
                     # 写入导出路径
@@ -180,20 +182,20 @@ class ExTittle(tk.Frame):
                     self.p.configer.set('extittle_setting', 'is_remember', str(self.val4.get()))
                     self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
                     # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
-                    suffix = time.strftime('%m.%d.%H-%M-%S', time.localtime())
-                    filepath = '{}/{}-导出的字幕-{}'.format(self.export_path[0], os.path.basename(draft), suffix)
-                    os.mkdir(filepath)
-                    self.write_txt(file_name=os.path.basename(draft), file_path=filepath)
+                    suffix = strftime('%m.%d.%H-%M-%S', localtime())
+                    filepath = '{}/{}-导出的字幕-{}'.format(self.export_path[0], basename(draft), suffix)
+                    mkdir(filepath)
+                    self.write_txt(file_name=basename(draft), file_path=filepath)
                     # 写入导出路径
                     if self.val1.get() == 1:
-                        self.write_srt(file_name=os.path.basename(draft), file_path=filepath)
+                        self.write_srt(file_name=basename(draft), file_path=filepath)
                     if self.val2.get() == 1:
-                        self.write_lrc(file_name=os.path.basename(draft), file_path=filepath)
+                        self.write_lrc(file_name=basename(draft), file_path=filepath)
                     if self.val3.get() == 1:
-                        self.write_font(file_name=os.path.basename(draft), file_path=filepath)
+                        self.write_font(file_name=basename(draft), file_path=filepath)
                 else:
                     messagebox.showwarning(title='缺少内容',
-                                           message='你选择的草稿{}中没有找到字幕！'.format(os.path.basename(draft)))
+                                           message='你选择的草稿{}中没有找到字幕！'.format(basename(draft)))
         else:
             messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')
 
@@ -215,10 +217,10 @@ class ExTittle(tk.Frame):
             st = dic.get('start')
             ed = dic.get('end')
             s = '{}\n{} --> {}\n{}\n'.format(
-               dic.get('serial'),
-               '{}:{}:{},{}'.format(st[0], st[1], st[2], st[3]),
-               '{}:{}:{},{}'.format(ed[0], ed[1], ed[2], ed[3]),
-               dic.get('content')
+                dic.get('serial'),
+                '{}:{}:{},{}'.format(st[0], st[1], st[2], st[3]),
+                '{}:{}:{},{}'.format(ed[0], ed[1], ed[2], ed[3]),
+                dic.get('content')
             )
             txt.append(s)
         with open('{}\\{}-字幕.srt'.format(file_path, file_name), 'w', encoding='utf-8') as f:
@@ -227,7 +229,7 @@ class ExTittle(tk.Frame):
         f.close()
         self.message.config(text='srt字幕文件导出成功！')
 
-    def write_lrc(self,  file_name: str, file_path: str):
+    def write_lrc(self, file_name: str, file_path: str):
         self.message.config(text='正在导出lrc歌词文件...')
         txt = []
         for dic in self.texts:
@@ -248,8 +250,7 @@ class ExTittle(tk.Frame):
         font_paths = set()
         for dic in self.texts:
             font_paths.add(dic.get('font_path'))
-
         for font in font_paths:
-            if os.path.exists(font):
-                public.win32_shell_copy(font, '{}\\{}-字体\\{}'.format(file_path, file_name, os.path.basename(font)))
+            if exists(font):
+                win32_shell_copy(font, '{}\\{}-字体\\{}'.format(file_path, file_name, basename(font)))
         self.message.config(text='导出字体成功！')

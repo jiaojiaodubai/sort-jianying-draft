@@ -1,9 +1,8 @@
-import tkinter as tk
-from tkinter import scrolledtext
-import webbrowser as wb
+from tkinter import Frame, scrolledtext, DISABLED, Label
+from webbrowser import open as wb_open
 
 
-class Help(tk.Frame):
+class Help(Frame):
     def __init__(self, parent):
         super().__init__(parent, width=560, height=155)
         txt = scrolledtext.ScrolledText(self, width=54, height=7, padx=5, pady=5)
@@ -39,11 +38,11 @@ class Help(tk.Frame):
         txt.tag_add('note', '7.0', '7.end')
         txt.insert(8.0, '一山不容二虎，使用时一定不要打开剪映~\n\n')
         # foreground是文字颜色，background
-        txt.config(state=tk.DISABLED, font=('微软雅黑', 13))
+        txt.config(state=DISABLED, font=('微软雅黑', 13))
         txt.grid(column=0, row=0)
 
 
-class LinkLabel(tk.Label):
+class LinkLabel(Label):
     link: str
 
     # LinkLabel可以显示超链接
@@ -57,6 +56,7 @@ class LinkLabel(tk.Label):
         self.is_click = False  # 未被点击
 
     # https://blog.csdn.net/tinga_kilin/article/details/107121628
+
     def change_color(self, event):
         self['fg'] = '#D52BC4'  # 鼠标进入，改变为紫色
         self['cursor'] = 'hand2'
@@ -68,4 +68,4 @@ class LinkLabel(tk.Label):
 
     def go_link(self, event):
         self.is_click = True  # 被链接点击后不再改变颜色
-        wb.open(self.link)
+        wb_open(self.link)

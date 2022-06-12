@@ -1,47 +1,48 @@
-import json
-import os
-import threading
-import time
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-import win32com.client
-import public
+from marshal import load
+from os import startfile
+from os.path import basename, isdir, abspath, split
+from threading import Thread
+from time import strftime, localtime
+from tkinter import filedialog, messagebox, Label, Button, Checkbutton, BooleanVar, Frame
+from tkinter.ttk import Combobox
+from win32com.client import Dispatch
+from src.public import PathManager, names2name, win32_shell_copy
 
 
-class ExVoice(tk.Frame):
-    p = public.PathManager()
+class ExVoice(Frame):
+    p = PathManager()
     drafts_origin = []
     drafts_todo = []
     export_path = [p.DESKTOP, ]
     audios = []
-    draft_comb: ttk.Combobox
-    export_comb: ttk.Combobox
-    message: tk.Label
-    export_button: tk.Button
-    is_open: tk.Checkbutton
-    is_remember: tk.Checkbutton
-    val1: tk.BooleanVar
-    val2: tk.BooleanVar
-    shells = win32com.client.Dispatch("WScript.Shell")
+    draft_comb: Combobox
+    export_comb: Combobox
+    message: Label
+    export_button: Button
+    is_open: Checkbutton
+    is_remember: Checkbutton
+    val1: BooleanVar
+    val2: BooleanVar
+    shells = Dispatch("WScript.Shell")
 
     def __init__(self, parent, label):
         super().__init__(parent, width=560, height=155)
-        draft_label = tk.Label(self, text='已选草稿：')
-        export_label = tk.Label(self, text='导出路径：')
+        draft_label = Label(self, text='已选草稿：')
+        export_label = Label(self, text='导出路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
         export_label.grid(row=1, column=0, pady=10, padx=5)
-        self.draft_comb = ttk.Combobox(self, width=51, state='readonly')
+        self.draft_comb = Combobox(self, width=51, state='readonly')
         self.draft_comb.grid(row=0, column=1, columnspan=2, pady=10, padx=5)
-        self.export_comb = ttk.Combobox(self, width=51)
+        self.export_comb = Combobox(self, width=51)
         self.export_comb.grid(row=1, column=1, columnspan=2, pady=10, padx=5)
         self.export_comb.config(values=self.export_path)
         self.export_comb.current(0)
-        draft_choose = tk.Button(self, text='选取草稿', command=self.choose_draft)
+        draft_choose = Button(self, text='选取草稿', command=self.choose_draft)
         draft_choose.grid(row=0, column=3, pady=5, padx=5)
-        export_choose = tk.Button(self, text='选择路径', command=self.choose_export)
+        export_choose = Button(self, text='选择路径', command=self.choose_export)
         export_choose.grid(row=1, column=3, pady=5, padx=5)
-        box_frame = tk.Frame(self, width=520, height=20)
-        self.val1, self.val2 = tk.BooleanVar(), tk.BooleanVar()
+        box_frame = Frame(self, width=520, height=20)
+        self.val1, self.val2 = BooleanVar(), BooleanVar()
         # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.configer.read('config.ini', encoding='utf-8')
         if self.p.configer.has_section('exvoice_setting'):
@@ -52,14 +53,14 @@ class ExVoice(tk.Frame):
         else:
             self.p.configer.add_section('exvoice_setting')
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        is_open = tk.Checkbutton(box_frame, text='完成后打开文件', variable=self.val1)
+        is_open = Checkbutton(box_frame, text='完成后打开文件', variable=self.val1)
         is_open.grid(row=0, column=0)
-        is_remember = tk.Checkbutton(box_frame, text='记住导出路径', variable=self.val2)
+        is_remember = Checkbutton(box_frame, text='记住导出路径', variable=self.val2)
         is_remember.grid(row=0, column=1)
         box_frame.grid(row=2, column=0, columnspan=4)
-        self.export_button = tk.Button(self, text='一键导出', padx=40,
-                                       command=lambda: threading.Thread(target=self.export).start(),
-                                       )
+        self.export_button = Button(self, text='一键导出', padx=40,
+                                    command=lambda: Thread(target=self.export).start(),
+                                    )
         self.export_button.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
         self.message = label
         self.p.collect_draft()
@@ -71,7 +72,7 @@ class ExVoice(tk.Frame):
                                               initialdir=self.p.DESKTOP,
                                               )
         # 不要把工程导出到原工程路径，否则会引发困扰
-        if os.path.isdir(select_temp) and select_temp not in self.p.paths[1]:
+        if isdir(select_temp) and select_temp not in self.p.paths[1]:
             self.export_path.insert(0, select_temp)
             self.export_comb.config(values=self.export_path)
             self.export_comb.current(0)
@@ -90,20 +91,20 @@ class ExVoice(tk.Frame):
         one_todo = []
         for link in links_select:
             # 直接split出来的斜杠方向和abspath出来的不一样，需要统一化
-            if os.path.abspath(os.path.split(link)[0]) == os.path.abspath('../draft-preview'):
+            if abspath(split(link)[0]) == abspath('../draft-preview'):
                 one_todo.insert(0, self.shells.CreateShortCut(link).Targetpath)
             else:
                 messagebox.showwarning(title='操作有误', message='你选择的文件有误！')
                 break
             self.drafts_todo.insert(0, tuple(one_todo))
-            self.draft_comb.config(values=public.names2name(self.drafts_todo))
+            self.draft_comb.config(values=names2name(self.drafts_todo))
             self.draft_comb.current(0)
             self.message.config(text='草稿选取完毕！')
 
     def analyse_meta(self, draft_path: str):
         self.audios.clear()
         with open('{}\\draft_content.json'.format(draft_path), 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            data = load(f)
             materials = data.get('materials')
             audios = materials.get('audios')
             i = 0
@@ -123,8 +124,8 @@ class ExVoice(tk.Frame):
         return has_audio
 
     def export(self):
-        # os.path.isdir(self.export_comb.get())防止选择拿空，self.draft_comb.get() in self.todo_history防止不选直接按空
-        if os.path.isdir(self.export_comb.get()) and self.draft_comb.get() in public.names2name(self.drafts_todo):
+        # isdir(self.export_comb.get())防止选择拿空，self.draft_comb.get() in self.todo_history防止不选直接按空
+        if isdir(self.export_comb.get()) and self.draft_comb.get() in names2name(self.drafts_todo):
             self.p.read_path()
             self.message.config(text='正在收集配音...')
             # 写入导出路径
@@ -135,27 +136,27 @@ class ExVoice(tk.Frame):
             self.p.configer.set('exvoice_setting', 'is_open', str(self.val1.get()))
             self.p.configer.set('exvoice_setting', 'is_remember', str(self.val2.get()))
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-            for draft in self.drafts_todo[public.names2name(self.drafts_todo).index(self.draft_comb.get())]:
+            for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
                 have_audio = self.analyse_meta(draft)
                 if have_audio:
                     # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
-                    suffix = time.strftime('%m.%d.%H-%M-%S', time.localtime())
-                    filepath = '{}\\{}-收集的配音-{}'.format(self.export_path[0], os.path.basename(draft), suffix)
+                    suffix = strftime('%m.%d.%H-%M-%S', localtime())
+                    filepath = '{}\\{}-收集的配音-{}'.format(self.export_path[0], basename(draft), suffix)
                     for audio in self.audios:
-                        public.win32_shell_copy(audio.get('path'),
-                                                '{}\\{}-{}-{}.wav'.format(filepath,
-                                                                          # 序号既能防止重复，也能标示先后顺序
-                                                                          audio.get('serial'),
-                                                                          audio.get('txt'),
-                                                                          audio.get('tune')
-                                                                          )
-                                                )
+                        win32_shell_copy(audio.get('path'),
+                                         '{}\\{}-{}-{}.wav'.format(filepath,
+                                                                   # 序号既能防止重复，也能标示先后顺序
+                                                                   audio.get('serial'),
+                                                                   audio.get('txt'),
+                                                                   audio.get('tune')
+                                                                   )
+                                         )
 
                     if self.val1.get() == 1:
-                        os.startfile(self.export_path[0])
+                        startfile(self.export_path[0])
                 else:
                     messagebox.showwarning(title='缺少内容',
-                                           message='你选择的草稿{}中没有找到配音！'.format(os.path.basename(draft)))
+                                           message='你选择的草稿{}中没有找到配音！'.format(basename(draft)))
             self.message.config(text='语音导出完毕！')
         else:
             messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')

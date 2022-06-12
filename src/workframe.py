@@ -1,13 +1,13 @@
-import base64
-import os
-import tkinter as tk
-from tkinter import ttk
+from base64 import b64decode
+from os import remove
+from tkinter import Toplevel, Label
+from tkinter.ttk import Notebook
 import extittle
 import exvoice
 import help
 import packdraft
 import unpackdraft
-import public as pb
+from public import img
 
 
 # import winshell
@@ -20,21 +20,21 @@ import public as pb
 #     return corner
 
 # 注意，Toplevel是子窗口，相当于带独立窗口边框的frame，且不需要loop，它会自动随着主窗口loop
-class WorkFrame(tk.Toplevel):
-    message: tk.Label
+class WorkFrame(Toplevel):
+    message: Label
 
     # noinspection SpellCheckingInspection
     def __init__(self, master):
         super().__init__(master)
         self.title('剪映草稿助手')
         with open('tmp.ico', 'wb') as tmp:
-            tmp.write(base64.b64decode(pb.img))
+            tmp.write(b64decode(img))
         self.iconbitmap('tmp.ico')
-        os.remove('tmp.ico')
+        remove('tmp.ico')
         self.geometry('580x220+300+250')
         self.resizable(False, False)
-        self.message = tk.Label(self, text='等待中...')
-        notebook = ttk.Notebook(self, width=560, height=155)
+        self.message = Label(self, text='等待中...')
+        notebook = Notebook(self, width=560, height=155)
         notebook.grid(row=0, column=0, padx=5, pady=5)
         frame1 = packdraft.PackDraft(notebook, self.message)
         frame2 = unpackdraft.UnpackDraft(notebook, self.message)

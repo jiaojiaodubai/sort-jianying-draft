@@ -1,11 +1,22 @@
-import configparser
-import os
-import re
-import shutil
-import winreg
-import win32com.client
+from configparser import ConfigParser
+from os import mkdir, listdir
+from os.path import exists, isdir, abspath, basename
+from re import match
+from shutil import rmtree
+from winreg import QueryValueEx, OpenKey, HKEY_CURRENT_USER
 from past.types import basestring
-from win32comext.shell import shellcon, shell
+from win32com.client import Dispatch
+from win32comext.shell.shell import SHFileOperation
+from win32comext.shell.shellcon import FO_COPY, FOF_NOCONFIRMMKDIR
+
+# noinspection SpellCheckingInspection
+'''
+https: // docs.microsoft.com / zh - cn / windows / win32 / api / shellapi / ns - shellapi - shfileopstructa?redirectedfrom = MSDN
+https: // stackoverflow.com / questions / 16867615 / copy - using - the - windows - copy - dialog
+https: // stackoverflow.com / questions / 5768403 / shfileoperation - doesnt - move - all - of - a - folders - contents
+https: // stackoverflow.com / questions / 4611237 / double - null - terminated - string
+'''
+
 
 # noinspection SpellCheckingInspection
 img = '''AAABAAEAAAAAAAEAIACTCwAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAEAAAABAAgGAAAAXHKoZgAAAAlwSFlzAAALEwAACxMBAJqcGAAAC0VJREF
@@ -44,10 +55,10 @@ nH2+AQIPPP94AgQaff7wBAg0+/70GSBJZ6fE2UJIyKz3eBkpSZqXH20BJyqz0eBsoSZmVHm8DJSmz0uN
 /AiEyk2L6pbvLAAAAAElFTkSuQmCC '''
 
 rule = [
-            [r'.*\\JianyingPro Drafts$', r'.*\\com[.]lveditor[.]draft$', ],
-            [r'.*\\JianyingPro\\User Data\\Cache$', ],
-            [r'.*\\JianyingPro\\(\d|[.])*\\Resources$', r'.*\\JianyingPro\\Apps\\(\d|[.])*\\Resources$']
-        ]
+    [r'.*\\JianyingPro Drafts$', r'.*\\com[.]lveditor[.]draft$', ],
+    [r'.*\\JianyingPro\\User Data\\Cache$', ],
+    [r'.*\\JianyingPro\\(\d|[.])*\\Resources$', r'.*\\JianyingPro\\Apps\\(\d|[.])*\\Resources$']
+]
 
 
 class PathManager:
@@ -58,17 +69,17 @@ class PathManager:
     meta_path = []
     meta_path_simp = []
     paths = [draft_path, cache_path, equip_path, meta_path, meta_path_simp]
-    shells = win32com.client.Dispatch("WScript.Shell")
+    shells = Dispatch("WScript.Shell")
 
-    DESKTOP = winreg.QueryValueEx(winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                                 r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'),
-                                  "Desktop"
-                                  )[0]
+    DESKTOP = QueryValueEx(OpenKey(HKEY_CURRENT_USER,
+                                   r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'),
+                           "Desktop"
+                           )[0]
 
     def __init__(self):
         self.read_path()
 
-    configer = configparser.ConfigParser()
+    configer = ConfigParser()
 
     def write_path(self):
         for i in range(5):
@@ -77,7 +88,7 @@ class PathManager:
             self.configer.write(f)
 
     def read_path(self):
-        if os.path.exists('config.ini'):
+        if exists('config.ini'):
             self.configer.read('config.ini', encoding='utf-8')
             for i in range(4):
                 if self.configer.has_option('paths', self.path_names[i]) \
@@ -96,18 +107,18 @@ class PathManager:
     def collect_draft(self):
         self.read_path()
         all_draft = []
-        if not os.path.exists('./draft-preview'):  # 判断文件夹是否存在
-            os.mkdir('./draft-preview')  # 不存在则新建文件夹
+        if not exists('./draft-preview'):  # 判断文件夹是否存在
+            mkdir('./draft-preview')  # 不存在则新建文件夹
         else:
-            # os.rmdir只能删除空文件夹，不空会报错，因此用shutil
-            shutil.rmtree('./draft-preview')
-            os.mkdir('./draft-preview')
+            # rmdir只能删除空文件夹，不空会报错，因此用shutil
+            rmtree('./draft-preview')
+            mkdir('./draft-preview')
         # 遍历所有名称满足条件草稿的路径
         for path in self.paths[0]:
-            ls = os.listdir(path)
+            ls = listdir(path)
             for item in ls:
                 full_path = r'{}\{}'.format(path, item)
-                if os.path.isdir(full_path):
+                if isdir(full_path):
                     # 以下代码会造成程序体积飞涨
                     # icon = Image.open(r'{}\draft_cover.jpg'.format(full_path))
                     # icon = icon.crop(cal_corner(icon.size[0], icon.size[1]))
@@ -115,7 +126,7 @@ class PathManager:
                     # icon.save(r'{}\draft_cover.png'.format(full_path), sizes=[(250, 250)])
                     # winshell.CreateShortcut(
                     #     # 必须使用绝对路径
-                    #     Path=os.path.join(os.path.abspath('draft-preview'), '{}.lnk'.format(item)),
+                    #     Path=join(abspath('draft-preview'), '{}.lnk'.format(item)),
                     #     Target=full_path,
                     #     Icon=('{}\\draft_cover.ico'.format(full_path), 0),
                     #     Description='单击选中该草稿'
@@ -144,16 +155,16 @@ def win32_shell_copy(src, dest):
      `SHFileOperation on MSDN <https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164(v=vs.85).aspx>`
     """
     if isinstance(src, basestring):  # in Py3 replace basestring with str
-        src = os.path.abspath(src)
+        src = abspath(src)
     else:  # iterable
-        src = '\0'.join(os.path.abspath(path) for path in src)
+        src = '\0'.join(abspath(path) for path in src)
 
-    result, aborted = shell.SHFileOperation((
+    result, aborted = SHFileOperation((
         0,
-        shellcon.FO_COPY,
+        FO_COPY,
         src,
-        os.path.abspath(dest),
-        shellcon.FOF_NOCONFIRMMKDIR,  # flags
+        abspath(dest),
+        FOF_NOCONFIRMMKDIR,  # flags
         None,
         None))
     if not aborted and result != 0:
@@ -165,20 +176,13 @@ def win32_shell_copy(src, dest):
     return not aborted
 
 
-# 以下方法只能创建文件夹，不能复制内部的内容，原因有待考究
-# noinspection SpellCheckingInspection
-# https: // docs.microsoft.com / zh - cn / windows / win32 / api / shellapi / ns - shellapi - shfileopstructa?redirectedfrom = MSDN
-# https: // stackoverflow.com / questions / 16867615 / copy - using - the - windows - copy - dialog
-# https: // stackoverflow.com / questions / 5768403 / shfileoperation - doesnt - move - all - of - a - folders - contents
-# https: // stackoverflow.com / questions / 4611237 / double - null - terminated - string
-
 def names2name(names: list):
     name = []
     for group in names:
         # 每一组内都要将temp重置，否则会保留上一个group的记录
         temp_group = []
         for one_name in group:
-            temp_group.append(os.path.basename(one_name))  # append确保新生成的名称表的顺序与原来一致
+            temp_group.append(basename(one_name))  # append确保新生成的名称表的顺序与原来一致
         name.append(','.join(temp_group))
     return name
 
@@ -186,6 +190,6 @@ def names2name(names: list):
 def is_match(path_str: str, position: int):
     is_find = False
     for key in rule[position]:
-        if re.match(key, path_str):
+        if match(key, path_str):
             is_find = True
     return is_find
