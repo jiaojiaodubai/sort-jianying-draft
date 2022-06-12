@@ -37,7 +37,7 @@ class Help(tk.Frame):
         # 由于文本框比较复杂，因此得用专门的方法来插入文字
         txt.insert(7.0, '{:*^60}'.format('注意事项') + '\n')  # 插入第一行，第0个字符，行从1开始算，字符从0开始算
         txt.tag_add('note', '7.0', '7.end')
-        txt.insert(8.0, '使用时请关闭后台的剪映主程序\n\n')
+        txt.insert(8.0, '一山不容二虎，使用时一定不要打开剪映~\n\n')
         # foreground是文字颜色，background
         txt.config(state=tk.DISABLED, font=('微软雅黑', 13))
         txt.grid(column=0, row=0)

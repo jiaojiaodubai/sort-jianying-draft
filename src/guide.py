@@ -202,12 +202,13 @@ class Guide(tk.Tk):
                         self.p.paths[i].remove(self.combs[i].get())
                     self.p.paths[i].insert(0, self.combs[i].get())
                 else:
-                    # 只要有一个错就提示错误
+                    # 只要有一个不匹配路径规则就提示错误
                     messagebox.showwarning(title='路径有误',
                                            message='您输入的{}路径有误，\n请重新选择！'.format(path_call[i]))
                     break
             else:
-                # 只要有一个错就提示错误
+                is_correct = False
+                # 只要有一个不是路径就提示错误
                 messagebox.showwarning(title='路径有误',
                                        message='请确认你输入的{}路径是否存在！'.format(path_call[i]))
                 break
