@@ -10,12 +10,10 @@ from win32comext.shell.shell import SHFileOperation
 from win32comext.shell.shellcon import FO_COPY, FOF_NOCONFIRMMKDIR
 
 # noinspection SpellCheckingInspection
-'''
-https: // docs.microsoft.com / zh - cn / windows / win32 / api / shellapi / ns - shellapi - shfileopstructa?redirectedfrom = MSDN
-https: // stackoverflow.com / questions / 16867615 / copy - using - the - windows - copy - dialog
-https: // stackoverflow.com / questions / 5768403 / shfileoperation - doesnt - move - all - of - a - folders - contents
-https: // stackoverflow.com / questions / 4611237 / double - null - terminated - string
-'''
+'''https: // docs.microsoft.com / zh - cn / windows / win32 / api / shellapi / ns - shellapi - 
+shfileopstructa?redirectedfrom = MSDN https: // stackoverflow.com / questions / 16867615 / copy - using - the - 
+windows - copy - dialog https: // stackoverflow.com / questions / 5768403 / shfileoperation - doesnt - move - all - 
+of - a - folders - contents https: // stackoverflow.com / questions / 4611237 / double - null - terminated - string '''
 
 
 # noinspection SpellCheckingInspection
@@ -142,13 +140,13 @@ def win32_shell_copy(src, dest):
     """
     Copy files and directories using Windows shell.
 
-    :param src: Path or a list of paths to copy. Filename portion of a path
+    : param src: Path or a list of paths to copy. Filename portion of a path
        (but not directory portion) can contain wildcards ``*`` and
        ``?``.
-    :param dest: destination directory.
-    :returns: ``True`` if the operation completed successfully,
+    : param dest: destination directory.
+    : returns: ``True`` if the operation completed successfully,
        ``False`` if it was aborted by user (completed partially).
-    :raises: ``WindowsError`` if anything went wrong. Typically, when source
+    : raises: ``WindowsError`` if anything went wrong. Typically, when source
       file was not found.
 
     .. see also:

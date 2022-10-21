@@ -6,7 +6,7 @@ from shutil import rmtree
 from threading import Thread
 from tkinter import filedialog, messagebox, BooleanVar, Checkbutton, Label, Button, Frame
 from tkinter.ttk import Combobox
-from src.public import PathManager, names2name, win32_shell_copy
+from public import PathManager, names2name, win32_shell_copy
 
 
 class UnpackDraft(Frame):

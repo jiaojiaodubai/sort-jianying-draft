@@ -7,8 +7,9 @@ from tkinter import filedialog, messagebox, Label, Button, Checkbutton, BooleanV
 from tkinter.ttk import Combobox
 from lxml import etree
 from win32com.client import Dispatch
+from public import PathManager, names2name, win32_shell_copy
 
-from src.public import PathManager, names2name, win32_shell_copy
+# TODO：将外部依赖的xml、pywin32等库写入readme的构建方法中
 
 
 class ExTittle(Frame):

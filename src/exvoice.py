@@ -6,7 +6,7 @@ from time import strftime, localtime
 from tkinter import filedialog, messagebox, Label, Button, Checkbutton, BooleanVar, Frame
 from tkinter.ttk import Combobox
 from win32com.client import Dispatch
-from src.public import PathManager, names2name, win32_shell_copy
+from public import PathManager, names2name, win32_shell_copy
 
 
 class ExVoice(Frame):

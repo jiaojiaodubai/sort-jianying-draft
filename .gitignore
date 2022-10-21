@@ -1,3 +1,9 @@
 .history
+.idea
 draft-preview
 config.ini
+__pycache__
+build
+dist
+venv
+test

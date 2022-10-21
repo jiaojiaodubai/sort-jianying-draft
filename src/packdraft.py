@@ -100,6 +100,7 @@ class PackDraft(Frame):
             self.message.config(text='导出路径选择完毕！')
         else:
             messagebox.showwarning(title='发生错误', message='请选择合适的文件夹！')
+        # TODO:将choose_xxx写入public作为公共方法来访问，减少代码重复量
 
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
@@ -120,6 +121,7 @@ class PackDraft(Frame):
             else:
                 messagebox.showwarning(title='操作有误', message='请在默认打开的位置内选取！')
                 break
+        # TODO:将choose_xxx写入public作为公共方法来访问，减少代码重复量
 
     def analyse_meta(self, draft_path: str):
         # 每次执行新项目就要清空上次的记录，否则记录会叠加
