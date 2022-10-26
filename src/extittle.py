@@ -9,8 +9,6 @@ from lxml import etree
 from win32com.client import Dispatch
 from public import PathManager, names2name, win32_shell_copy
 
-# TODO：将外部依赖的xml、pywin32等库写入readme的构建方法中
-
 
 class ExTittle(Frame):
     p = PathManager()
@@ -146,7 +144,7 @@ class ExTittle(Frame):
                                     du = int(seg.get('target_timerange').get('duration'))
                                     ed = st + du
                                     simp_dic['start'] = '{:02d},{:02d},{:02d},{:02d}'.format(
-                                        # 微秒格式化，微秒到毫秒金旅是1000，毫秒到秒进率也是1000
+                                        # 微秒格式化，微秒到毫秒进率是1000，毫秒到秒进率也是1000
                                         st // (60 * transer),
                                         st % (60 * transer) // transer,
                                         st % (60 * transer) % transer // 1000000,

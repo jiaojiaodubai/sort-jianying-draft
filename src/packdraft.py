@@ -161,7 +161,7 @@ class PackDraft(Frame):
             for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
                 # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
                 suffix = strftime('%m.%d.%H-%M-%S', localtime())
-                filepath = '{}/{}-收集的草稿-{}'.format(self.export_path[0], basename(draft), suffix)
+                filepath = '{}\\{}-收集的草稿-{}'.format(self.export_path[0], basename(draft), suffix)
                 self.analyse_meta(draft)
                 win32_shell_copy(draft, '{}\\{}'.format(filepath, basename(draft)))
                 win32_shell_copy(abspath('config.ini'), '{}\\config.ini'.format(filepath))

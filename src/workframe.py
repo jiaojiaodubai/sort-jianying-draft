@@ -2,6 +2,7 @@ from base64 import b64decode
 from os import remove
 from tkinter import Toplevel, Label
 from tkinter.ttk import Notebook
+
 import extittle
 import exvoice
 import help
@@ -40,13 +41,15 @@ class WorkFrame(Toplevel):
         frame2 = unpackdraft.UnpackDraft(notebook, self.message)
         frame3 = extittle.ExTittle(notebook, self.message)
         frame4 = exvoice.ExVoice(notebook, self.message)
-        frame5 = help.Help(notebook)
+        # frame5 = testmould.TestMould(notebook, self.message)
+        frame6 = help.Help(notebook)
         # 适用format格式化字符串是将标签宽度限定为一个定值的好办法
-        notebook.add(frame1, text='{: ^19}'.format('打包草稿'))
-        notebook.add(frame2, text='{: ^19}'.format('导入草稿'))
-        notebook.add(frame3, text='{: ^19}'.format('导出字幕'))
-        notebook.add(frame4, text='{: ^19}'.format('导出配音'))
-        notebook.add(frame5, text='{: ^19}'.format('帮助'))
+        notebook.add(frame1, text='{: ^10}'.format('打包草稿'))
+        notebook.add(frame2, text='{: ^10}'.format('导入草稿'))
+        notebook.add(frame3, text='{: ^10}'.format('导出字幕'))
+        notebook.add(frame4, text='{: ^10}'.format('导出配音'))
+        # notebook.add(frame5, text='{: ^10}'.format('测试模块'))
+        notebook.add(frame6, text='{: ^10}'.format('帮助'))
+
         # sticky属性表示组件的相对对齐方式，w表示西边
         self.message.grid(row=1, column=0, sticky='w')
-        # self.mainloop()
