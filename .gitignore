@@ -5,3 +5,6 @@ dist
 venv
 test
 ref
+/src/draft-preview
+/src/config.ini
+main.spec
