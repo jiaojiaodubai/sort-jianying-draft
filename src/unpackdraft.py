@@ -14,10 +14,9 @@ class UnpackDraft(Frame):
     p = PathManager()
     import_path = [p.DESKTOP, ]
     draft_todo = [(p.DESKTOP,), ]
-    draft_history = []
     # 此时还未读取，因此
-    draft_target = list
-    meta_target: list
+    draft_target: list[str]
+    meta_target: list[str]
     val1: BooleanVar
     val2: BooleanVar
     val3: BooleanVar
@@ -30,23 +29,23 @@ class UnpackDraft(Frame):
 
     def __init__(self, parent, label):
         super().__init__(parent, width=560, height=155)
-        self.draft_target = self.p.paths[0][0]
-        self.meta_target = ['{}/metas'.format(self.p.paths[1][0]), ]
+        self.draft_target = self.p.paths[1][0]
+        self.meta_target = [r'{}\metas'.format(self.p.paths[1][0]), ]
         draft_label = Label(self, text='已选草稿：')
         export_label = Label(self, text='素材路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
         export_label.grid(row=1, column=0, pady=10, padx=5)
-        self.draft_comb = Combobox(self, width=51, state='readonly')
+        self.draft_comb = Combobox(self, width=52, state='readonly')
         self.draft_comb.grid(row=0, column=1, columnspan=2, pady=10, padx=5)
         self.draft_comb.config(values=names2name(self.draft_todo))
         self.draft_comb.current(0)
-        self.meta_comb = Combobox(self, width=51)
+        self.meta_comb = Combobox(self, width=52)
         self.meta_comb.grid(row=1, column=1, columnspan=2, pady=10, padx=5)
         self.meta_comb.config(values=self.meta_target)
         self.meta_comb.current(0)
-        draft_choose = Button(self, text='选取草稿', command=self.choose_draft)
+        draft_choose = Button(self, text='选取草稿', command=self.choose_draft, width=10)
         draft_choose.grid(row=0, column=3, pady=5, padx=5)
-        export_choose = Button(self, text='选择路径', command=self.choose_meta_target)
+        export_choose = Button(self, text='选择路径', command=self.choose_meta_target, width=10)
         export_choose.grid(row=1, column=3, pady=5, padx=5)
         box_frame = Frame(self, width=520, height=20)
         self.val1, self.val2 = BooleanVar(), BooleanVar()
@@ -67,16 +66,16 @@ class UnpackDraft(Frame):
         is_save = Checkbutton(box_frame, text='保存打开路径', variable=self.val2, padx=10)
         is_save.grid(row=0, column=1)
         box_frame.grid(row=2, column=0, columnspan=4)
-        self.export_button = Button(self, text='一键导入', padx=40,
+        self.export_button = Button(self, text='一键导入草稿', padx=40,
                                     command=lambda: Thread(target=self._import).start(),
                                     )
         self.export_button.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
         self.message = label
         self.p.read_path()
-        if exists('{}/metas'.format(self.p.paths[1][0])):
+        if exists(r'{}\metas'.format(self.p.paths[1][0])):
             pass
         else:
-            mkdir('{}/metas'.format(self.p.paths[1][0]))
+            mkdir(r'{}\metas'.format(self.p.paths[1][0]))
 
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
@@ -103,29 +102,31 @@ class UnpackDraft(Frame):
 
     def rewrite_json(self, draft_path: str):
         json_file = ['draft_agency_config.json', 'draft_content.json', 'draft_meta_info.json']
-        keys = ['draft_path', 'cache_path', 'equip_path', 'meta_path_simp']
+        keys = ['draft_path', 'Data_path', 'install_path', 'meta_path_simp']
         # 旧的素材目录名称需要自己读取、自己分割
         paths_old = []
         configer = configparser.ConfigParser()
-        configer.read('{}/config.ini'.format(abspath(dirname(draft_path))), encoding='utf-8')
+        configer.read(r'{}\config.ini'.format(abspath(dirname(draft_path))), encoding='utf-8')
         for key in keys:
             ls_tem = configer.get('paths', key).split(',')
             paths_old.append(sorted(ls_tem, key=lambda i: len(i), reverse=True))
         self.p.read_path()  # 更新了p.paths
-        path_new = self.p.paths[0:-2]  # 目标和源还算是不要冲突比较好，否则两个功能会干扰
-        target = '{}/{}'.format(self.meta_target[0], basename(draft_path))
-        path_new.append([target, ])
+        paths_new = self.p.paths[0:-2]  # 目标和源还算是不要冲突比较好，否则两个功能会干扰
+        this_draft_target = r'{}\{}'.format(self.meta_target[0], basename(draft_path))
+        paths_new.append([this_draft_target, ])
         # 遍历三个文件
         for json in json_file:
-            with open('{}/{}'.format(draft_path, json), 'r', encoding='utf-8') as f:
+            with open(r'{}\{}'.format(draft_path, json), 'r', encoding='utf-8') as f:
                 s = f.read()
-                # 遍历四种路径
+                # 遍历四种路径，本次草稿位置、安装位置、全局草稿位置、缓存位置
                 for j in range(4):
-                    for path in paths_old[j]:  # 从长到短把路径换掉
-                        path_temp = PurePath(path_new[j][0]).as_posix()
-                        s = s.replace(path, path_temp)  # 统一换为guide提供的第一个
+                    for path_old in paths_old[j]:  # 从长到短把路径换掉
+                        # json文件中的箭头是posix格式的，必须转换
+                        # https://docs.python.org/zh-cn/3/library/pathlib.html#pathlib.PurePath.as_posix
+                        path_new = PurePath(paths_new[j][0]).as_posix()
+                        s = s.replace(path_old, path_new)  # 统一换为guide提供的第一个
             f.close()
-            with open('{}/{}'.format(draft_path, json), 'w', encoding='utf-8') as f:
+            with open(r'{}\{}'.format(draft_path, json), 'w', encoding='utf-8') as f:
                 f.write(s)
             f.close()
 
@@ -150,18 +151,18 @@ class UnpackDraft(Frame):
                 # self.p.paths[4].append([self.meta_comb.get()])
                 # 依据组合框的显示的值来确定操作哪一组草稿
                 for draft in self.draft_todo[names2name(self.draft_todo).index(self.draft_comb.get())]:
-                    meta_path = '{}/meta'.format(abspath(dirname(draft)))
+                    meta_path = r'{}\meta'.format(abspath(dirname(draft)))
                     self.p.write_path()
                     self.rewrite_json(draft)
-                    win32_shell_copy(draft, '{}/{}'.format(self.p.paths[0][0], basename(draft)))
+                    win32_shell_copy(draft, r'{}\{}'.format(self.p.paths[1][0], basename(draft)))
                     if self.val1.get() != 1:
                         if exists(meta_path):
                             win32_shell_copy(meta_path, self.meta_target[0])
                             # FileError: [WinError 183] 当文件已存在时，无法创建该文件。
-                            if exists('{}/{}'.format(self.meta_target[0], basename(draft))):
-                                rmtree('{}/{}'.format(self.meta_target[0], basename(draft)))
-                            rename('{}/meta'.format(self.meta_target[0]),
-                                   '{}/{}'.format(self.meta_target[0], basename(draft)))
+                            if exists(r'{}\{}'.format(self.meta_target[0], basename(draft))):
+                                rmtree(r'{}\{}'.format(self.meta_target[0], basename(draft)))
+                            rename(r'{}\meta'.format(self.meta_target[0]),
+                                   r'{}\{}'.format(self.meta_target[0], basename(draft)))
                         else:
                             self.message.config(text='注意，该草稿没有媒体文件！')
                             messagebox.showinfo('可能遇到了异常', '该工程没有媒体文件\n请在后续步骤中链接素材！')
@@ -173,7 +174,7 @@ class UnpackDraft(Frame):
         one_todo = []
         for super_path, sub_path, sub_files in walk(import_path):
             # 别把原来就有的给导进来了
-            if 'draft_content.json' in sub_files and super_path not in self.p.paths[0]:
+            if 'draft_content.json' in sub_files and super_path not in self.p.paths[1]:
                 one_todo.insert(0, super_path)
         if len(one_todo) != 0:
             self.import_path.insert(0, import_path)  # 更新导入路径

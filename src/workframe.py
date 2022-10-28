@@ -11,14 +11,8 @@ import unpackdraft
 from public import img
 
 
-# import winshell
-# from PIL import Image
-# def cal_corner(x: int, y: int):
-#     if x < y:
-#         corner = (0, (y - x) // 2, x, ((y - x) // 2) + x)
-#     else:
-#         corner = ((x - y) // 2, 0, ((x - y) // 2) + y, y)
-#     return corner
+# import testmould
+
 
 # 注意，Toplevel是子窗口，相当于带独立窗口边框的frame，且不需要loop，它会自动随着主窗口loop
 class WorkFrame(Toplevel):
@@ -32,10 +26,12 @@ class WorkFrame(Toplevel):
             tmp.write(b64decode(img))
         self.iconbitmap('tmp.ico')
         remove('tmp.ico')
-        self.geometry('580x220+300+250')
+        width, height = 580, 220
+        x, y = int((self.winfo_screenwidth() - width) / 2), int((self.winfo_screenheight() - height) / 2)
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))  # 大小以及位置
         self.resizable(False, False)
         self.message = Label(self, text='等待中...')
-        notebook = Notebook(self, width=560, height=155)
+        notebook = Notebook(self, width=567, height=155)
         notebook.grid(row=0, column=0, padx=5, pady=5)
         frame1 = packdraft.PackDraft(notebook, self.message)
         frame2 = unpackdraft.UnpackDraft(notebook, self.message)
@@ -44,12 +40,12 @@ class WorkFrame(Toplevel):
         # frame5 = testmould.TestMould(notebook, self.message)
         frame6 = help.Help(notebook)
         # 适用format格式化字符串是将标签宽度限定为一个定值的好办法
-        notebook.add(frame1, text='{: ^10}'.format('打包草稿'))
-        notebook.add(frame2, text='{: ^10}'.format('导入草稿'))
-        notebook.add(frame3, text='{: ^10}'.format('导出字幕'))
-        notebook.add(frame4, text='{: ^10}'.format('导出配音'))
-        # notebook.add(frame5, text='{: ^10}'.format('测试模块'))
-        notebook.add(frame6, text='{: ^10}'.format('帮助'))
+        notebook.add(frame1, text='{: ^14}'.format('打包草稿'))
+        notebook.add(frame2, text='{: ^14}'.format('导入草稿'))
+        notebook.add(frame3, text='{: ^14}'.format('导出字幕'))
+        notebook.add(frame4, text='{: ^14}'.format('导出配音'))
+        # notebook.add(frame5, text='{: ^14}'.format('测试模块'))
+        notebook.add(frame6, text='{: ^14}'.format('帮助'))
 
         # sticky属性表示组件的相对对齐方式，w表示西边
         self.message.grid(row=1, column=0, sticky='w')

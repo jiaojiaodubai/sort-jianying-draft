@@ -19,13 +19,14 @@ from public import img, PathManager, is_match, get_key_locate
 
 class Guide(Tk):
     message: Label
-    draft_comb: Combobox
-    cache_comb: Combobox
-    cloud_comb: Combobox
+    labels = [Label]
+    install_comb: Combobox
+    drafts_comb: Combobox
+    data_comb: Combobox
     combs = [Combobox]  # 把复选框绑定起来
-    draft_button: Button
-    cache_button: Button
-    cloud_button: Button
+    install_button: Button
+    drafts_button: Button
+    data_button: Button
     buttons = [Button]  # 把按钮绑定起来
     progress_bar: Progressbar
     submit_button: Button
@@ -43,7 +44,9 @@ class Guide(Tk):
         self.iconbitmap('tmp.ico')
         remove('tmp.ico')
         self.title('导入路径')
-        self.geometry('560x255+300+250')
+        width, height = 560, 255
+        x, y = int((self.winfo_screenwidth() - width) / 2), int((self.winfo_screenheight() - height) / 2)
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))  # 大小以及位置
         self.config(padx=5)  # 5px的边缘不至于太拥挤
         # 第一列标签的初始化及捆绑
         install_path_label = Label(self, text='安装路径：')
@@ -51,21 +54,24 @@ class Guide(Tk):
         data_path_label = Label(self, text='Data路径：')
         self.labels = [install_path_label, draft_path_label, data_path_label]
         # 第二列输入框的初始化及捆绑
-        self.draft_comb = Combobox(self, width=52)
-        self.cache_comb = Combobox(self, width=52)
-        self.cloud_comb = Combobox(self, width=52)
-        self.combs = [self.draft_comb, self.cache_comb, self.cloud_comb]
-        # 第三列按钮的初始化及捆绑，使用lambda表达式实现传参
-        self.draft_button = Button(text='选择路径',
-                                   command=lambda: self.manual_search(0),
-                                   )
-        self.cache_button = Button(text='选择路径',
-                                   command=lambda: self.manual_search(1),
-                                   )
-        self.cloud_button = Button(text='选择路径',
-                                   command=lambda: self.manual_search(2),
-                                   )
-        self.buttons = [self.draft_button, self.cache_button, self.cloud_button]
+        self.install_comb = Combobox(self, width=52)
+        self.drafts_comb = Combobox(self, width=52)
+        self.data_comb = Combobox(self, width=52)
+        self.combs = [self.install_comb, self.drafts_comb, self.data_comb]
+        # 第三列按钮的初始化及捆绑，使用lambda表达式实现传参，按钮也需要显式声明父容器
+        self.install_button = Button(self,
+                                     text='选择路径',
+                                     command=lambda: self.manual_search(0),
+                                     )
+        self.drafts_button = Button(self,
+                                    text='选择路径',
+                                    command=lambda: self.manual_search(1),
+                                    )
+        self.data_button = Button(self,
+                                  text='选择路径',
+                                  command=lambda: self.manual_search(2),
+                                  )
+        self.buttons = [self.install_button, self.drafts_button, self.data_button]
         # 一些单独的组件：状态提示和进度条
         self.message = Label(self)
         self.message.grid(row=0, column=0, columnspan=3, padx=5, pady=10)
@@ -86,14 +92,10 @@ class Guide(Tk):
             self.labels[i].grid(row=i + 1, column=0, pady=5, sticky='e')
             self.combs[i].grid(row=i + 1, column=1, pady=5)
             self.buttons[i].grid(row=i + 1, column=2, pady=5)
-        self.activate_button(False)
         self.check_env()
         # 不要把主功能和loop加入到else子句，否则会出现意外（因为找不到loop）
-        # 执行窗体功能
+        # 自动从注册表获取路径，其他读取方式由用户手动操作
         self.auto_get()
-        # thread = Thread(target=self.is_have, args=(30,))
-        # thread.start()
-        # 窗口基本参数
         self.mainloop()
 
     @staticmethod
@@ -104,27 +106,6 @@ class Guide(Tk):
             if Process(pid).name() == 'JianyingPro.exe':
                 messagebox.showerror(title='遇到异常', message='检测到剪映正在后台运行，\n请关闭剪映后重新启动本程序！')
                 exit()
-
-    # def is_have(self, speed: int = 5):
-    #     self.update_comb(speed)  # 第一次update时为了显示历史记录或者提示语句
-    #     self.message.config(text='正在读取历史记录...')
-    #     self.progress_bar.start()
-    #     # 检查历史记录
-    #     if not self.p.read_path():
-    #         if messagebox.askokcancel(title='遇到异常', message='缺少历史记录，是否使用自动获取？'):
-    #             self.message.config(text='正在自动搜索...')
-    #             thread = Thread(target=self.auto_search, args=(True,))
-    #             thread.start()
-    #             thread.join()  # 主线程等待子线程结束后才结束
-    #             self.message.config(text='已完成路径检索！')
-    #         else:
-    #             self.message.config(text='请点击相应按钮来选取路径...')
-    #             self.activate_button()
-    #     # 此时只检查是否有历史记录以及时给出反馈，并解锁按钮，
-    # 手动输入的值在稍后提交时再验证
-    # if self.update_comb(5):
-    #     self.message.config(text='已找到历史记录！')
-    #     self.activate_button()
 
     def activate_button(self, state: bool):
         if state:
@@ -240,6 +221,3 @@ class Guide(Tk):
             self.w.grab_set()
             self.wait_window(self.w)
             self.message.config(text='路径提交成功！')
-
-
-g = Guide()
