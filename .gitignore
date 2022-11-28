@@ -5,8 +5,6 @@ dist
 venv
 test
 ref
-/src/draft-preview
-/src/config.ini
 main.spec
 /src/__pycache__
 /src/testmould.py
