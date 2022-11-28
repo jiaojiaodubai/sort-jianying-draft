@@ -2,7 +2,6 @@ from os import path
 from threading import Thread
 from tkinter import Frame, Label, Checkbutton, Button, filedialog, messagebox, BooleanVar
 from tkinter.ttk import Combobox
-
 # 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
 from win32com.client import Dispatch
 
