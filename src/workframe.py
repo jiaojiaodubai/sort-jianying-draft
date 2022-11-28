@@ -45,6 +45,8 @@ class WorkFrame(Toplevel):
         notebook.add(frame3, text='{: ^14}'.format('导出字幕'))
         notebook.add(frame4, text='{: ^14}'.format('导出配音'))
         # notebook.add(frame5, text='{: ^14}'.format('测试模块'))
+        # TODO：增加“清除草稿”功能，删除草稿附带的所有依赖文件
+        # TODO：为导出草稿增加“导出后删除原草稿”选项
         notebook.add(frame6, text='{: ^14}'.format('帮助'))
 
         # sticky属性表示组件的相对对齐方式，w表示西边

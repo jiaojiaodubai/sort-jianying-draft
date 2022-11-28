@@ -65,6 +65,7 @@ class UnpackDraft(Frame):
         is_only.grid(row=0, column=0)
         is_save = Checkbutton(box_frame, text='保存打开路径', variable=self.val2, padx=10)
         is_save.grid(row=0, column=1)
+        # TODO：记住meta路径
         box_frame.grid(row=2, column=0, columnspan=4)
         self.export_button = Button(self, text='一键导入草稿', padx=40,
                                     command=lambda: Thread(target=self._import).start(),
