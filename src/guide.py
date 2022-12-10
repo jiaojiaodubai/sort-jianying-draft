@@ -221,3 +221,4 @@ class Guide(Tk):
             self.w.grab_set()
             self.wait_window(self.w)
             self.message.config(text='路径提交成功！')
+            # TODO：已知关闭第一次生成的窗口后，再次点“下一步”会出现空窗口

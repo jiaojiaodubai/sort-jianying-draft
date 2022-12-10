@@ -77,6 +77,7 @@ class UnpackDraft(Frame):
             pass
         else:
             mkdir(r'{}\metas'.format(self.p.paths[1][0]))
+            # TODO：这里的逻辑有问题，metas不应该在当前位置，可能是引用的p.paths元素有问题
 
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
