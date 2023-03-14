@@ -215,9 +215,7 @@ class Guide(Tk):
             self.p.write_path()
             self.w = workframe.WorkFrame(self)
             # 以下代码的作用是使workframe窗口仅有一个，且打开workframe时不允许过多操作主窗口
-            self.w.deiconify()
             self.w.transient(self)
-            # self.w.focus_set()
             self.w.grab_set()
             self.wait_window(self.w)
             self.message.config(text='路径提交成功！')
