@@ -35,9 +35,9 @@ class Guide(Tk):
     def __init__(self):
         super().__init__()
         self.resizable(False, False)
-        # 为了适用窗口退出而设置的代码
-        # https://stackoverflow.com/questions/24885827/python-tkinter-how-can-i-ensure-only-one-child-window-is-created-onclick-and-no
-        self.w = None
+        # 开始时就要实例化，否则关闭后失去Workframe对象
+        self.w = workframe.WorkFrame(self)
+        self.w.withdraw()
         # with open会自动帮我们关闭文件，不需要手动关闭
         with open('tmp.ico', 'wb') as tmp:  # wb表示以覆盖写模式、二进制方式打开文件
             tmp.write(b64decode(img))  # 通过base64的decode解码图标文件
@@ -213,12 +213,14 @@ class Guide(Tk):
                 break
         if is_correct:
             self.p.write_path()
-            # 这时才定义这个组件是Workframe
             self.w = workframe.WorkFrame(self)
             # 以下代码的作用是使workframe窗口仅有一个，且打开workframe时不允许过多操作主窗口
+            self.w.deiconify()
             self.w.transient(self)
-            self.w.focus_set()
+            # self.w.focus_set()
             self.w.grab_set()
             self.wait_window(self.w)
             self.message.config(text='路径提交成功！')
-            # TODO：已知关闭第一次生成的窗口后，再次点“下一步”会出现空窗口
+            # TODO：已知关闭第一次生成的窗口后，再次点“下一步”会出现空窗口，初步判断是Workframe未能创建实例
+            # _tkinter.TclError: bad window path name
+            # https://blog.csdn.net/xhw2021/article/details/121342515
