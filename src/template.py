@@ -2,6 +2,7 @@ from os import path
 from threading import Thread
 from tkinter import Frame, Label, Checkbutton, Button, filedialog, messagebox, BooleanVar
 from tkinter.ttk import Combobox
+
 # 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
 from win32com.client import Dispatch
 
@@ -38,12 +39,6 @@ class Template(Frame):
 
     def __init__(self, parent, label: Label):
         super().__init__(parent, width=560, height=155)
-        # if mode == 0:
-        #     mode_name = '导出'
-        # elif mode == 1:
-        #     mode_name = '导入'
-        # else:
-        #     mode_name = '目标'
         draft_label = Label(self, text='已选草稿：')
         # export_label = Label(self, text=f'{mode_name}路径：')
         export_label = Label(self, text='导出路径：')

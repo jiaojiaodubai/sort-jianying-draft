@@ -8,3 +8,5 @@ ref
 main.spec
 /src/__pycache__
 /src/testmould.py
+/src/config.ini
+/src/draft-preview

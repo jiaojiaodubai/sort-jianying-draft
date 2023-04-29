@@ -29,12 +29,12 @@ class UnpackDraft(Frame):
 
     def __init__(self, parent, label):
         super().__init__(parent, width=560, height=155)
-        self.draft_target = self.p.paths[1][0]
-        self.meta_target = [r'{}\metas'.format(self.p.paths[1][0]), ]
         draft_label = Label(self, text='已选草稿：')
         export_label = Label(self, text='素材路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
         export_label.grid(row=1, column=0, pady=10, padx=5)
+        self.draft_target = self.p.paths[1][0]
+        self.meta_target = [r'{}\metas'.format(self.p.paths[1][0]), ]
         self.draft_comb = Combobox(self, width=52, state='readonly')
         self.draft_comb.grid(row=0, column=1, columnspan=2, pady=10, padx=5)
         self.draft_comb.config(values=names2name(self.draft_todo))
