@@ -10,16 +10,25 @@ from public import names2name, win32_shell_copy
 
 
 class PackDraft(template.Template):
-    # 必须重载这两个变量，否则用父类的构建方法访问的只能是父类的类属性，从而造成子类间的变量混淆
-    checks: list[Checkbutton] = []
-    vals: list[BooleanVar] = []
-    checks_names = ['is_only', 'is_zip', 'is_open', 'is_remember']
-    checks_names_display = ['仅导出索引', '打包为单文件', '完成后打开文件', '记住导出路径']
+    # 模块级
     mould_name = 'pack'
     mould_name_display = '导出草稿'
 
+    # 目标行
+    t_comb_name = '导出路径:'
+
+    # 复选行
+    checks: list[Checkbutton] = []
+    checks_names = ['仅导出索引', '打包为单文件', '完成后打开文件', '记住导出路径']
+    # 必须重载这两个变量，否则用父类的构建方法访问的只能是父类的类属性，从而造成子类间的变量混淆
+    vals: list[BooleanVar] = []
+    vals_names = ['is_only', 'is_zip', 'is_open', 'is_remember']
+
     def __init__(self, parent, label):
         super().__init__(parent, label)
+        self.target_path = [self.p.DESKTOP, ]
+        self.target_comb.config(values=self.target_path)
+        self.target_comb.current(0)
 
     def analyse_meta(self, draft_path: str):
         # 每次执行新项目就要清空上次的记录，否则记录会叠加
@@ -44,12 +53,12 @@ class PackDraft(template.Template):
     def main_fun(self):
         # 写入导出路径
         if self.vals[3].get() == 1:
-            self.p.configer.set('pack_setting', 'export_path', ','.join(self.export_path))
+            self.p.configer.set('pack_setting', 'target_path', ','.join(self.target_path))
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
         for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
             # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
             suffix = strftime('%m.%d.%H-%M-%S', localtime())
-            filepath = '{}\\{}-收集的草稿-{}'.format(self.export_path[0], basename(draft), suffix)
+            filepath = '{}\\{}-收集的草稿-{}'.format(self.target_path[0], basename(draft), suffix)
             self.analyse_meta(draft)
             win32_shell_copy(draft, '{}\\{}'.format(filepath, basename(draft)))
             win32_shell_copy(abspath('config.ini'), '{}\\config.ini'.format(filepath))
@@ -65,5 +74,5 @@ class PackDraft(template.Template):
                 rmtree(filepath)
                 self.message.config(text='草稿文件创建成功！')
             if self.vals[3].get() == 1:
-                startfile(self.export_path[0])
+                startfile(self.target_path[0])
         self.message.config(text='草稿打包完毕！')
