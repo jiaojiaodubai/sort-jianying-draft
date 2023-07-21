@@ -29,6 +29,20 @@ class UnpackDraft(Frame):
 
     def __init__(self, parent, label):
         super().__init__(parent, width=560, height=155)
+        self.message = label
+        # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
+        # TODO: guide没检查，建议在模板中根据module_name和vals_name执行检查
+        self.p.configer.read('config.ini', encoding='utf-8')
+        if self.p.configer.has_section('unpack_setting'):
+            if self.p.configer.has_option('unpack_setting', 'is_only'):
+                self.val1.set(eval(self.p.configer.get('unpack_setting', 'is_only')))
+            if self.p.configer.has_option('unpack_setting', 'is_save'):
+                self.val2.set(eval(self.p.configer.get('unpack_setting', 'is_save')))
+            if self.p.configer.has_option('unpack_setting', 'import_path'):
+                self.import_path.insert(0, self.p.configer.get('unpack_setting', 'import_path'))
+        else:
+            self.p.configer.add_section('unpack_setting')
+            self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
         draft_label = Label(self, text='已选草稿：')
         export_label = Label(self, text='素材路径：')
         draft_label.grid(row=0, column=0, pady=10, padx=5)
@@ -49,18 +63,6 @@ class UnpackDraft(Frame):
         export_choose.grid(row=1, column=3, pady=5, padx=5)
         box_frame = Frame(self, width=520, height=20)
         self.val1, self.val2 = BooleanVar(), BooleanVar()
-        # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
-        self.p.configer.read('config.ini', encoding='utf-8')
-        if self.p.configer.has_section('unpack_setting'):
-            if self.p.configer.has_option('unpack_setting', 'is_only'):
-                self.val1.set(eval(self.p.configer.get('unpack_setting', 'is_only')))
-            if self.p.configer.has_option('unpack_setting', 'is_save'):
-                self.val2.set(eval(self.p.configer.get('unpack_setting', 'is_save')))
-            if self.p.configer.has_option('unpack_setting', 'import_path'):
-                self.import_path.insert(0, self.p.configer.get('unpack_setting', 'import_path'))
-        else:
-            self.p.configer.add_section('unpack_setting')
-            self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
         is_only = Checkbutton(box_frame, text='仅导入索引', variable=self.val1, padx=10)
         is_only.grid(row=0, column=0)
         is_save = Checkbutton(box_frame, text='保存打开路径', variable=self.val2, padx=10)
@@ -71,7 +73,6 @@ class UnpackDraft(Frame):
                                     command=lambda: Thread(target=self._import).start(),
                                     )
         self.export_button.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
-        self.message = label
         self.p.read_path()
         if exists(r'{}\metas'.format(self.p.paths[1][0])):
             pass

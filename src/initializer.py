@@ -1,20 +1,16 @@
-"""
-这是本程序打开后的引导窗口，用于获取草稿路径、缓存路径、内置素材路径
-"""
 import winreg
-from _thread import start_new_thread
 from base64 import b64decode
-from os import remove, walk, path
-from sys import exit
-from tkinter import Tk, filedialog, messagebox, DISABLED, HORIZONTAL, NORMAL
-from tkinter.ttk import Progressbar, Combobox, Button, Frame, Label
-
-from psutil import pids, disk_partitions, Process
+from os import remove, path
+from tkinter import filedialog, messagebox, DISABLED, HORIZONTAL, NORMAL, Toplevel
+from tkinter.ttk import Progressbar, Combobox, Button, Label
 
 from public import img, PathManager, is_match, get_key_locate
 
 
-class Guide(Tk):
+# Toplevel是子窗口，相当于带独立窗口边框的frame，且不需要loop，它会自动随着主窗口loop
+
+
+class Initializer(Toplevel):
     message: Label
     labels = [Label]
     install_comb: Combobox
@@ -43,6 +39,11 @@ class Guide(Tk):
         x, y = int((self.winfo_screenwidth() - width) / 2), int((self.winfo_screenheight() - height) / 2)
         self.geometry('{}x{}+{}+{}'.format(width, height, x, y))  # 大小以及位置
         self.config(padx=5)  # 5px的边缘不至于太拥挤
+        # 一些单独的组件：状态提示和进度条
+        self.message = Label(self)
+        self.message.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+        self.progress_bar = Progressbar(self, length=540, mode='indeterminate', orient=HORIZONTAL)
+        self.progress_bar.grid(row=1, column=0, columnspan=3, padx=5, pady=10)
         # 第一列标签的初始化及捆绑
         install_path_label = Label(self, text='安装路径：')
         draft_path_label = Label(self, text='草稿路径：')
@@ -67,54 +68,27 @@ class Guide(Tk):
                                   command=lambda: self.manual_search(2),
                                   )
         self.buttons = [self.install_button, self.drafts_button, self.data_button]
-        # 一些单独的组件：状态提示和进度条
-        self.message = Label(self)
-        self.message.grid(row=0, column=0, columnspan=3, padx=5, pady=10)
-        self.progress_bar = Progressbar(self, length=540, mode='indeterminate', orient=HORIZONTAL)
-        self.progress_bar.grid(row=4, column=0, columnspan=3, padx=5, pady=10)
-        # 通过采用frame容器重新打包，完成按钮之间的对齐
-        bt_frame = Frame(self, width=255, height=20)
-        self.submit_button = Button(bt_frame, text='下一步>>>', state=DISABLED, width=30, command=self.submit)
-        self.submit_button.grid(row=0, column=1, padx=10)
-        self.auto_button = Button(bt_frame, text='全盘搜索',
-                                  width=30,
-                                  # 注意此处lambda表达式的写法，因为开启线程要求必须传入参数，因此选定了一个不痛不痒的速度参数
-                                  command=lambda: start_new_thread(self.auto_search, (50,)))
-        self.auto_button.grid(row=0, column=0, padx=10)
-        bt_frame.grid(row=5, column=0, columnspan=3)
         # 批量布局标签、组合框、按钮
         for i in range(3):
-            self.labels[i].grid(row=i + 1, column=0, pady=5, sticky='e')
-            self.combs[i].grid(row=i + 1, column=1, pady=5)
-            self.buttons[i].grid(row=i + 1, column=2, pady=5)
-        self.check_env()
-        # 不要把主功能和loop加入到else子句，否则会出现意外（因为找不到loop）
-        # 自动从注册表获取路径，其他读取方式由用户手动操作
-        self.auto_get()
-        self.mainloop()
+            self.labels[i].grid(row=i + 2, column=0, pady=5, sticky='e')
+            self.combs[i].grid(row=i + 2, column=1, pady=5)
+            self.buttons[i].grid(row=i + 2, column=2, pady=5)
 
-    @staticmethod
-    def check_env():
-        _pids = pids()
-        for pid in _pids:
-            # 由于pid是动态分配的，因此通过程序名称来定位进程更合理
-            if Process(pid).name() == 'JianyingPro.exe':
-                messagebox.showerror(title='遇到异常', message='检测到剪映正在后台运行，\n请关闭剪映后重新启动本程序！')
-                exit()
+        # # 通过采用frame容器重新打包，完成按钮之间的对齐
+        # bt_frame = Frame(self, width=255, height=20)
+        # self.submit_button = Button(bt_frame, text='下一步>>>', state=DISABLED, width=30, command=self.submit)
+        # self.submit_button.grid(row=0, column=1, padx=10)
+        # bt_frame.grid(row=5, column=0, columnspan=3)
 
     def activate_button(self, state: bool):
         if state:
             for i in range(3):
                 self.combs[i].config(state=NORMAL)
                 self.buttons[i].config(state=NORMAL)
-            self.submit_button.config(state=NORMAL)
-            self.auto_button.config(state=NORMAL)
         else:
             for i in range(3):
                 self.combs[i].config(state=DISABLED)
                 self.buttons[i].config(state=DISABLED)
-            self.submit_button.config(state=DISABLED)
-            self.auto_button.config(state=DISABLED)
 
     def auto_get(self):
         self.p.paths[0].insert(0, get_key_locate(winreg.HKEY_CURRENT_USER,
@@ -129,25 +103,6 @@ class Guide(Tk):
         if self.update_comb(5):
             self.message.config(text='已找到历史记录！')
             self.activate_button(True)
-
-    def auto_search(self, char_len: int):
-        self.activate_button(False)
-        disk_infor = disk_partitions(all=False)
-        i = 0  # 遍历计数单位
-        for item in disk_infor:
-            # disk_info原来都是一个partitions对象，这里为了类型兼容，强制转换为list
-            for super_path, sub_path, sub_files in walk(list(item)[1]):
-                i += 1
-                self.message.config(text='已查找{}个文件，正在检查{}...'.format(i, super_path)[:char_len] + '...')
-                for j in range(3):
-                    if is_match(super_path, j):
-                        self.p.paths[j].insert(0, super_path)
-                        # 实现在不改变列表顺序的情况下，以原来的次序作为键值进行去重
-        self.update_comb()
-        self.message.config(text='全盘搜索完毕!（仅提供可能的路径）')
-        self.activate_button(True)
-        # 全盘搜索就是依次遍历，不会出现重复，不需要去重
-        self.p.write_path()
 
     def manual_search(self, position: int):
         # filedialog返回的是posix格式的地址字符串，为了统一，这里用os.path.abspath改写为Windows风格
@@ -208,23 +163,5 @@ class Guide(Tk):
                 break
         if is_correct:
             self.p.write_path()
-            self.w = workframe.WorkFrame(self)
-            # 以下代码的作用是使workframe窗口仅有一个，且打开workframe时不允许过多操作主窗口
-            # https://stackoverflow.com/questions/29233029/python-tkinter-show-only-one-copy-of-window?
-            # 注册瞬时窗口，取消窗口最小化
-            # self.w.transient(self)
-            # 获取焦点
-            # self.w.focus_set()
-            # 夺走所有事件
-            # self.w.grab_set()
-            # https://python.tutorialink.com/how-to-make-pop-up-window-with-force-attention-in-tkinter/
-            # 获取焦点
-            self.w.transient(self)
-            self.w.focus_set()
-            self.w.protocol("WM_DELETE_WINDOW", self.close)
-            self.attributes('-disabled', True)
-            self.message.config(text='路径提交成功！')
 
-    def close(self):
-        self.attributes('-disabled', False)
-        self.w.destroy()
+            self.message.config(text='路径提交成功！')

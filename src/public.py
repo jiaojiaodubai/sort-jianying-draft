@@ -75,31 +75,19 @@ class PathManager:
     def collect_draft(self):
         self.read_path()
         all_draft = []
-        if not exists('./draft-preview'):  # 判断文件夹是否存在
-            mkdir('./draft-preview')  # 不存在则新建文件夹
+        if not exists(r'.\draft-preview'):  # 判断文件夹是否存在
+            mkdir(r'.\draft-preview')  # 不存在则新建文件夹
         else:
             # rmdir只能删除空文件夹，不空会报错，因此用shutil
-            rmtree('./draft-preview')
-            mkdir('./draft-preview')
+            rmtree(r'.\draft-preview')
+            mkdir(r'.\draft-preview')
         # 遍历所有名称满足条件草稿的路径
         for path in self.paths[1]:
             ls = listdir(path)
             for item in ls:
                 full_path = r'{}\{}'.format(path, item)
                 if isdir(full_path):
-                    # 以下代码会造成程序体积飞涨
-                    # icon = Image.open(r'{}\draft_cover.jpg'.format(full_path))
-                    # icon = icon.crop(cal_corner(icon.size[0], icon.size[1]))
-                    # icon.save(r'{}\draft_cover.ico'.format(full_path), sizes=[(250, 250)])
-                    # icon.save(r'{}\draft_cover.png'.format(full_path), sizes=[(250, 250)])
-                    # winshell.CreateShortcut(
-                    #     # 必须使用绝对路径
-                    #     Path=join(abspath('draft-preview'), '{}.lnk'.format(item)),
-                    #     Target=full_path,
-                    #     Icon=('{}\\draft_cover.ico'.format(full_path), 0),
-                    #     Description='单击选中该草稿'
-                    # )
-                    shortcut = self.shells.CreateShortCut('./draft-preview/{}.lnk'.format(item))
+                    shortcut = self.shells.CreateShortCut(r'.\draft-preview\{}.lnk'.format(item))
                     shortcut.Targetpath = full_path
                     shortcut.save()
                     all_draft.append(full_path)
@@ -107,8 +95,9 @@ class PathManager:
 
 
 def get_key_locate(main_key: int, sub_key: str, value_name: str):
-    key = OpenKey(main_key, sub_key)
-    value = QueryValueEx(key, value_name)[0]
+    value = QueryValueEx(OpenKey(main_key, sub_key),
+                         value_name
+                         )[0]
     return value
 
 

@@ -1,9 +1,103 @@
 # encoding = utf-8
-import guide
+"""
+主程序
+"""
+
+from base64 import b64decode
+from os import remove, path
+from tkinter import Tk, messagebox
+from tkinter.ttk import Notebook, Label
+from winreg import HKEY_CURRENT_USER
+
+from psutil import process_iter
+
+import help
+import public
+from src import packdraft
+
+
+class MainWin(Tk):
+    p = public.PathManager()
+    message: Label
+
+    def __init__(self):
+        super().__init__()
+        self.title('剪映导出助手')
+        with open('tmp.ico', 'wb') as tmp:
+            tmp.write(b64decode(public.img))
+        self.iconbitmap('tmp.ico')
+        remove('tmp.ico')
+        width, height = 580, 220
+        x, y = int((self.winfo_screenwidth() - width) / 2), int((self.winfo_screenheight() - height) / 2)
+        self.minsize(400, 220)
+        # self.maxsize(1200, 220)
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))  # 大小以及位置
+        self.resizable(True, False)
+        self.message = Label(self, text='等待中...')
+        notebook = Notebook(self, width=567, height=155)
+        notebook.grid(row=0, column=0, padx=5, pady=5, sticky='EW')
+        self.grid_columnconfigure(index=0, weight=1, minsize=300)
+        # notebook.pack(padx=5, pady=5, )
+        frame1 = packdraft.PackDraft(notebook, self.message)
+        # frame2 = unpackdraft.UnpackDraft(notebook, self.message)
+        # frame3 = extittle.ExTittle(notebook, self.message)
+        # frame4 = exvoice.ExVoice(notebook, self.message)
+        # frame5 = testmould.TestMould(notebook, self.message)
+        frame6 = help.Help(notebook)
+        # 适用format格式化字符串是将标签宽度限定为一个定值的好办法
+        notebook.add(frame1, text='{: ^14}'.format('打包草稿'))
+        # notebook.add(frame2, text='{: ^14}'.format('导入草稿'))
+        # notebook.add(frame3, text='{: ^14}'.format('导出字幕'))
+        # notebook.add(frame4, text='{: ^14}'.format('导出配音'))
+        # notebook.add(frame5, text='{: ^14}'.format('测试模块'))
+        # TODO：为导出草稿增加“导出后删除原草稿”选项
+        notebook.add(frame6, text='{: ^14}'.format('帮助'))
+
+        # sticky属性表示组件的相对对齐方式，w表示西边
+        self.message.grid(row=1, column=0, sticky='W')
+        # self.w = initializer.Initializer()
+        #
+        # # 禁止与下层窗口交互
+        # # https://python.tutorialink.com/how-to-make-pop-up-window-with-force-attention-in-tkinter/
+        # self.w.transient(self)
+        # self.w.focus_set()
+        # self.w.protocol("WM_DELETE_WINDOW", self.close)
+        # self.attributes('-disabled', True)
+        try:
+            self.auto_get()
+            self.p.write_path()
+        except OSError:
+            messagebox.showerror(title='获取路径失败',
+                                 message='您可能未正确安装剪映，请尝试重新安装剪映'
+                                 )
+            exit(1)
+
+        for process in process_iter(attrs=['name']):
+            if process.name() == 'JianyingPro.exe':
+                messagebox.showerror(title='剪映未关闭',
+                                     message='请关闭剪映再启动本程序！'
+                                     )
+                exit(1)
+        self.mainloop()
+
+    # def close(self):
+    #     self.attributes('-disabled', False)
+    #     self.w.destroy()
+
+    def auto_get(self):
+        self.p.paths[0].insert(0, public.get_key_locate(HKEY_CURRENT_USER,
+                                                        r'Software\Bytedance\JianyingPro',
+                                                        'installDir').strip('\\'))
+        self.p.paths[1].insert(0, public.get_key_locate(HKEY_CURRENT_USER,
+                                                        r'Software\Bytedance\JianyingPro\GlobalSettings\History',
+                                                        'currentCustomDraftPath'))
+        # https://www.tutorialspoint.com/How-to-find-the-real-user-home-directory-using-Python
+        self.p.paths[2].insert(0, fr'{path.expanduser("~")}\AppData\Local\JianyingPro\User Data')
+
 
 # 主类仅作为测试入口
 if __name__ == '__main__':
-    g = guide.Guide()
+    m = MainWin()
 
 # TODO：找到mac创建文件夹的快捷方式（替身）的API，替换Win的Dispatch("WScript.Shell")
 # TODO：在mac上测试不同的文件复制方法，看是否有进度提示，如果没有，设置进度等待界面。
