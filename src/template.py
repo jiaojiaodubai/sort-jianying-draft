@@ -1,4 +1,5 @@
 from os import path
+from os.path import isdir
 from threading import Thread
 from tkinter import filedialog, messagebox, BooleanVar
 from tkinter.ttk import Frame, Label, Button, Checkbutton, Combobox
@@ -26,12 +27,15 @@ class Template(Frame):
     message: Label
     mould_name: str
     mould_name_display: str
-    # 草稿行
     p = PathManager()
-    drafts_todo = [tuple()]
+    # 草稿行
+    source_path = []
+    # TODO: source或许值得记录
+    draft_todo = [tuple()]
     draft_comb: Combobox
     d_comb_name = '已选草稿：'
     # 目标行
+    # TODO: target或许值得记录
     target_path = []
     target_comb: Combobox
     t_comb_name = '目标路径：'
@@ -49,7 +53,7 @@ class Template(Frame):
         # 模块
         self.message = label
         # 部分组件创建时依赖预配置，因此先读取配置
-        self.p.configer.read('config.ini', encoding='utf-8')  # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
+        self.p.configer.read(r'.\config.ini', encoding='utf-8')  # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
         self.p.collect_draft()
         self.p.read_path()
 
@@ -111,13 +115,15 @@ class Template(Frame):
                                               initialdir=self.p.DESKTOP,
                                               )
         # 不要把工程导出到原工程路径，否则会引发困扰
-        if path.isdir(select_temp) and select_temp not in self.p.paths[1]:
+        if isdir(select_temp) and select_temp not in self.p.paths[1]:
             self.target_path.insert(0, select_temp)
             self.target_comb.config(values=self.target_path)
             self.target_comb.current(0)
             self.message.config(text='导出路径选择完毕！')
+            return True
         else:
             messagebox.showwarning(title='发生错误', message='请选择合适的文件夹！')
+            return False
 
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
@@ -128,29 +134,32 @@ class Template(Frame):
                                                    filetypes=[('快捷方式', '*.lnk *link')]
                                                    )
         batch = []  # 一次可能选中多个
-        for link in links_select:
-            # 仅在draft-preview内选取的文件有效
-            if path.abspath(path.dirname(link)) == path.abspath(r'.\draft-preview'):
-                batch.insert(0, self.shells.CreateShortCut(link).Targetpath)
-                self.drafts_todo.insert(0, tuple(batch))
-                self.draft_comb.config(values=names2name(self.drafts_todo))
-                self.draft_comb.current(0)
-                self.message.config(text='草稿选取完毕！')
-            else:
-                messagebox.showwarning(title='操作有误', message='请在默认打开的位置内选取！')
-                break
+        if links_select != '':
+            for link in links_select:
+                # 仅在draft-preview内选取的文件有效
+                if path.abspath(path.dirname(link)) == path.abspath(r'.\draft-preview'):
+                    batch.insert(0, self.shells.CreateShortCut(link).Targetpath)
+                else:
+                    messagebox.showwarning(title='操作有误', message='请在默认打开的位置内选取！')
+                    return False
+            self.draft_todo.insert(0, tuple(batch))
+            self.draft_comb.config(values=names2name(self.draft_todo))
+            self.draft_comb.current(0)
+            self.message.config(text='草稿选取完毕！')
+            return True
+        else:
+            messagebox.showwarning(title='操作有误', message='未选中任何草稿')
+            return False
 
     def main_fun(self):
         # 防止选择拿空
         if self.draft_comb.get() != '':
             self.p.read_path()
             self.message.config(text=f'正在{self.mould_name_display}...')
-
             # 导出预置项
             for i in range(len(self.checks_names)):
                 self.p.configer.set(f'{self.mould_name}_setting', self.vals_names[i], str(self.vals[i].get()))
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-
             self.patch_fun()
             self.message.config(text=f'{self.mould_name_display}完毕！')
         else:

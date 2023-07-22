@@ -47,7 +47,7 @@ class ExVoice(template.Template):
         if self.vals[1].get() == 1:
             self.p.configer.set('exvoice_setting', 'export_path', ','.join(self.export_path))
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
+        for draft in self.draft_todo[names2name(self.draft_todo).index(self.draft_comb.get())]:
             have_audio = self.analyse_meta(draft)
             if have_audio:
                 # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确

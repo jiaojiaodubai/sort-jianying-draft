@@ -4,16 +4,13 @@
 """
 
 from base64 import b64decode
-from os import remove, path
+from os import remove
 from tkinter import Tk, messagebox
 from tkinter.ttk import Notebook, Label
-from winreg import HKEY_CURRENT_USER
 
 from psutil import process_iter
 
-import help
-import public
-from src import packdraft
+from src import help, packdraft, public, testmould
 
 
 class MainWin(Tk):
@@ -42,14 +39,14 @@ class MainWin(Tk):
         # frame2 = unpackdraft.UnpackDraft(notebook, self.message)
         # frame3 = extittle.ExTittle(notebook, self.message)
         # frame4 = exvoice.ExVoice(notebook, self.message)
-        # frame5 = testmould.TestMould(notebook, self.message)
+        frame5 = testmould.TestMould(notebook, self.message)
         frame6 = help.Help(notebook)
         # 适用format格式化字符串是将标签宽度限定为一个定值的好办法
         notebook.add(frame1, text='{: ^14}'.format('打包草稿'))
         # notebook.add(frame2, text='{: ^14}'.format('导入草稿'))
         # notebook.add(frame3, text='{: ^14}'.format('导出字幕'))
         # notebook.add(frame4, text='{: ^14}'.format('导出配音'))
-        # notebook.add(frame5, text='{: ^14}'.format('测试模块'))
+        notebook.add(frame5, text='{: ^14}'.format('测试模块'))
         # TODO：为导出草稿增加“导出后删除原草稿”选项
         notebook.add(frame6, text='{: ^14}'.format('帮助'))
 
@@ -63,14 +60,6 @@ class MainWin(Tk):
         # self.w.focus_set()
         # self.w.protocol("WM_DELETE_WINDOW", self.close)
         # self.attributes('-disabled', True)
-        try:
-            self.auto_get()
-            self.p.write_path()
-        except OSError:
-            messagebox.showerror(title='获取路径失败',
-                                 message='您可能未正确安装剪映，请尝试重新安装剪映'
-                                 )
-            exit(1)
 
         for process in process_iter(attrs=['name']):
             if process.name() == 'JianyingPro.exe':
@@ -83,16 +72,6 @@ class MainWin(Tk):
     # def close(self):
     #     self.attributes('-disabled', False)
     #     self.w.destroy()
-
-    def auto_get(self):
-        self.p.paths[0].insert(0, public.get_key_locate(HKEY_CURRENT_USER,
-                                                        r'Software\Bytedance\JianyingPro',
-                                                        'installDir').strip('\\'))
-        self.p.paths[1].insert(0, public.get_key_locate(HKEY_CURRENT_USER,
-                                                        r'Software\Bytedance\JianyingPro\GlobalSettings\History',
-                                                        'currentCustomDraftPath'))
-        # https://www.tutorialspoint.com/How-to-find-the-real-user-home-directory-using-Python
-        self.p.paths[2].insert(0, fr'{path.expanduser("~")}\AppData\Local\JianyingPro\User Data')
 
 
 # 主类仅作为测试入口

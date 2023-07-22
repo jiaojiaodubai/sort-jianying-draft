@@ -3,10 +3,11 @@ from os import startfile, remove
 from os.path import exists, basename, split, abspath
 from shutil import make_archive, rmtree
 from time import strftime, localtime
-from tkinter import Checkbutton, BooleanVar
+from tkinter import BooleanVar, messagebox
+from tkinter.ttk import Checkbutton
 
-import template
 from public import names2name, win32_shell_copy
+from src import template
 
 
 class PackDraft(template.Template):
@@ -35,7 +36,6 @@ class PackDraft(template.Template):
         self.p.paths[3].clear()
         self.p.paths[4].clear()
         with open(fr'{draft_path}\draft_meta_info.json', 'r', encoding='utf-8') as f:
-            # TODO：路径统一写为生字符串
             data = load(f)
             meta_temp = data.pop('draft_materials')
             meta_dic = meta_temp[0]
@@ -56,18 +56,23 @@ class PackDraft(template.Template):
         # 写入导出路径
         self.p.configer.set('pack_setting', 'target_path', ','.join(self.target_path))
         self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
+        # 实现从下拉框直接选
+        for draft in self.draft_todo[names2name(self.draft_todo).index(self.draft_comb.get())]:
             # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
             suffix = strftime('%m.%d.%H-%M-%S', localtime())
-            filepath = '{}\\{}-收集的草稿-{}'.format(self.target_path[0], basename(draft), suffix)
+            filepath = fr'{self.target_path[0]}\{basename(draft)}-收集的草稿-{suffix}'
             self.analyse_meta(draft)
-            win32_shell_copy(draft, '{}\\{}'.format(filepath, basename(draft)))
-            win32_shell_copy(abspath(r'.\config.ini'), '{}\\config.ini'.format(filepath))
+            try:
+                win32_shell_copy(draft, fr'{filepath}\{basename(draft)}')
+                win32_shell_copy(abspath(r'.\config.ini'), fr'{filepath}\config.ini')
+            except WindowsError as e:
+                messagebox.showerror(title=f'复制过程中发生错误{e}')
+                exit(1)
             # 未选中“仅导出索引，就导出素材”
             if self.vals[0].get() != 1:
                 # 复制的是文件，则复制后也应当是文件
                 for path in self.p.paths[3]:
-                    win32_shell_copy(path, '{}\\meta\\{}'.format(filepath, basename(path)))
+                    win32_shell_copy(path, fr'{filepath}\meta\{basename(path)}')
             if self.vals[1].get() == 1:
                 self.message.config(text='正在压缩单文件...')
                 make_archive(filepath, 'zip', filepath)

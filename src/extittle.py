@@ -68,7 +68,7 @@ class ExTittle(template.Template):
         return has_tittle
 
     def main_fun(self):
-        for draft in self.drafts_todo[names2name(self.drafts_todo).index(self.draft_comb.get())]:
+        for draft in self.draft_todo[names2name(self.draft_todo).index(self.draft_comb.get())]:
             have_tittle = self.analyse_meta(draft)
             if have_tittle:
                 # 写入导出路径
