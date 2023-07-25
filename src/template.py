@@ -7,7 +7,7 @@ from tkinter.ttk import Frame, Label, Button, Checkbutton, Combobox
 # 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
 from win32com.client import Dispatch
 
-from public import PathManager, names2name
+from public import Initializer, names2name, DESKTOP, PathX
 
 
 class Template(Frame):
@@ -25,9 +25,9 @@ class Template(Frame):
     # TODO: 如果变量不需要在构建方法以外的函数被调用，则不需要设为成员变量
     # 模块级属性
     message: Label
-    mould_name: str
-    mould_name_display: str
-    p = PathManager()
+    module_name: str
+    module_name_display: str
+    p = Initializer()
     # 草稿行
     source_path = []
     # TODO: source或许值得记录
@@ -36,7 +36,7 @@ class Template(Frame):
     d_comb_name = '已选草稿：'
     # 目标行
     # TODO: target或许值得记录
-    target_path = []
+    target_path: PathX
     target_comb: Combobox
     t_comb_name = '目标路径：'
     # 复选行
@@ -53,8 +53,6 @@ class Template(Frame):
         # 模块
         self.message = label
         # 部分组件创建时依赖预配置，因此先读取配置
-        self.p.configer.read(r'.\config.ini', encoding='utf-8')  # 启动guide的时候就已经检查过config.ini了，因此不再执行检查
-        self.p.collect_draft()
         self.p.read_path()
 
         # 草稿行
@@ -73,9 +71,9 @@ class Template(Frame):
         target_choose = Button(self, text='选择路径', command=self.choose_export, width=10)
         target_choose.grid(row=1, column=3, pady=5, padx=5)
         # 载入预记录的目标路径
-        if self.p.configer.has_option(f'{self.mould_name}_setting', 'target_path'):
-            self.target_path.insert(0, self.p.configer.get(f'{self.mould_name}_setting', 'target_path'))
-            self.target_comb.config(values=self.target_path)
+        if self.p.configer.has_option(self.module_name, 'target_path'):
+            self.target_path.add(self.p.configer.get(self.module_name, 'target_path'))
+            self.target_comb.config(values=self.target_path.content)
             self.target_comb.current(0)
 
         # 复选行
@@ -84,10 +82,10 @@ class Template(Frame):
         for i in range(len(self.vals_names)):
             self.vals.append(BooleanVar())
             # 读取选项框预置
-            if self.p.configer.has_section(f'{self.mould_name}_setting'):
+            if self.p.configer.has_section(self.module_name):
                 # 必须判断再get，否则没有配置项时将出错
-                if self.p.configer.has_option(f'{self.mould_name}_setting', self.vals_names[i]):
-                    self.vals[i].set(eval(self.p.configer.get(f'{self.mould_name}_setting', self.vals_names[i])))
+                if self.p.configer.has_option(self.module_name, self.vals_names[i]):
+                    self.vals[i].set(eval(self.p.configer.get(self.module_name, self.vals_names[i])))
             # 批量构造复选框并布局
             checks.append(Checkbutton(self.checks_frame, text=self.checks_names[i], variable=self.vals[i]))
             # 成员变量导致窗口定位失败
@@ -100,7 +98,7 @@ class Template(Frame):
         self.checks_frame.grid(row=2, column=0, columnspan=4)
 
         # 按钮行
-        self.main_fun_button = Button(self, text=f'一键{self.mould_name_display}',
+        self.main_fun_button = Button(self, text=f'一键{self.module_name_display}',
                                       command=lambda: Thread(target=self.main_fun()).start(),
                                       width=20
                                       )
@@ -112,12 +110,12 @@ class Template(Frame):
     def choose_export(self):
         select_temp = filedialog.askdirectory(parent=self,
                                               title='请选择导出位置',
-                                              initialdir=self.p.DESKTOP,
+                                              initialdir=DESKTOP,
                                               )
         # 不要把工程导出到原工程路径，否则会引发困扰
-        if isdir(select_temp) and select_temp not in self.p.paths[1]:
-            self.target_path.insert(0, select_temp)
-            self.target_comb.config(values=self.target_path)
+        if isdir(select_temp) and select_temp not in self.p.draft_path.content:
+            self.target_path.add(select_temp)
+            self.target_comb.config(values=self.target_path.content)
             self.target_comb.current(0)
             self.message.config(text='导出路径选择完毕！')
             return True
@@ -155,13 +153,13 @@ class Template(Frame):
         # 防止选择拿空
         if self.draft_comb.get() != '':
             self.p.read_path()
-            self.message.config(text=f'正在{self.mould_name_display}...')
+            self.message.config(text=f'正在{self.module_name_display}...')
             # 导出预置项
             for i in range(len(self.checks_names)):
-                self.p.configer.set(f'{self.mould_name}_setting', self.vals_names[i], str(self.vals[i].get()))
+                self.p.configer.set(self.module_name, self.vals_names[i], str(self.vals[i].get()))
             self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
             self.patch_fun()
-            self.message.config(text=f'{self.mould_name_display}完毕！')
+            self.message.config(text=f'{self.module_name_display}完毕！')
         else:
             messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')
 

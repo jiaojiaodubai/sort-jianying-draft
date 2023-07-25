@@ -13,8 +13,8 @@ class ExVoice(template.Template):
     vals: list[BooleanVar] = []
     checks_names = ['is_open', 'is_remember']
     checks_names_display = ['完成后打开文件', '记住导出路径']
-    mould_name = 'exvoice'
-    mould_name_display = '导出配音'
+    module_name = 'exvoice'
+    module_name_display = '导出配音'
     audios = []
 
     def __init__(self, parent, label):

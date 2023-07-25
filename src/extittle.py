@@ -15,8 +15,8 @@ class ExTittle(template.Template):
     vals: list[BooleanVar] = []
     checks_names = ['is_srt', 'is_lrc', 'is_font', 'is_remember']
     checks_names_display = ['导出SRT字幕', '导出LRC字幕', '连同字体导出', '记住导出路径']
-    mould_name = 'extittle'
-    mould_name_display = '导出字幕'
+    module_name = 'extittle'
+    module_name_display = '导出字幕'
     texts = []
 
     def __init__(self, parent, label):

@@ -10,18 +10,19 @@ from tkinter.ttk import Notebook, Label
 
 from psutil import process_iter
 
-from src import help, packdraft, public, testmould
+from public import Initializer, img
+from src import help, packdraft
 
 
 class MainWin(Tk):
-    p = public.PathManager()
+    p = Initializer()
     message: Label
 
     def __init__(self):
         super().__init__()
         self.title('剪映导出助手')
         with open('tmp.ico', 'wb') as tmp:
-            tmp.write(b64decode(public.img))
+            tmp.write(b64decode(img))
         self.iconbitmap('tmp.ico')
         remove('tmp.ico')
         width, height = 580, 220
@@ -39,14 +40,14 @@ class MainWin(Tk):
         # frame2 = unpackdraft.UnpackDraft(notebook, self.message)
         # frame3 = extittle.ExTittle(notebook, self.message)
         # frame4 = exvoice.ExVoice(notebook, self.message)
-        frame5 = testmould.TestMould(notebook, self.message)
+        # frame5 = testmould.TestMould(notebook, self.message)
         frame6 = help.Help(notebook)
         # 适用format格式化字符串是将标签宽度限定为一个定值的好办法
         notebook.add(frame1, text='{: ^14}'.format('打包草稿'))
         # notebook.add(frame2, text='{: ^14}'.format('导入草稿'))
         # notebook.add(frame3, text='{: ^14}'.format('导出字幕'))
         # notebook.add(frame4, text='{: ^14}'.format('导出配音'))
-        notebook.add(frame5, text='{: ^14}'.format('测试模块'))
+        # notebook.add(frame5, text='{: ^14}'.format('测试模块'))
         # TODO：为导出草稿增加“导出后删除原草稿”选项
         notebook.add(frame6, text='{: ^14}'.format('帮助'))
 
