@@ -8,7 +8,7 @@ import template
 from public import names2name, win32_shell_copy, PathX, DESKTOP
 
 
-class TestMould(template.Template):
+class ExVoice(template.Template):
     # 模块级属性
     module_name = 'ex_voice'
     module_name_display = '导出配音'

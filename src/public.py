@@ -35,6 +35,9 @@ DESKTOP = get_key(HKEY_CURRENT_USER,
                   )
 
 
+# TODO：有望用更轻量的模块来实现
+#  https://pypi.org/project/ifileoperation/
+#  https://learn.microsoft.com/zh-cn/windows/win32/api/shobjidl_core/nf-shobjidl_core-ifileoperation-copyitems
 def win32_shell_copy(src, dest) -> bool:
     """
     使用Windows Shell复制目录或文件。
@@ -93,7 +96,6 @@ def is_match(path_str: str, position: int):
     return is_find
 
 
-# TODO: 完成新的PathX对象在模板类中的适配
 class PathX:
     module: str
     name: str
