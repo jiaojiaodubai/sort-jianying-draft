@@ -6,8 +6,8 @@ from time import strftime, localtime
 from tkinter import BooleanVar, messagebox
 from tkinter.ttk import Checkbutton
 
+import template
 from public import names2name, win32_shell_copy, DESKTOP, PathX
-from src import template
 
 
 class PackDraft(template.Template):

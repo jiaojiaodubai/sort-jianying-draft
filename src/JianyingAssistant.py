@@ -10,8 +10,12 @@ from tkinter.ttk import Notebook, Label
 
 from psutil import process_iter
 
+import extittle
+import exvoice
+import help
+import packdraft
+import unpackdraft
 from public import Initializer, img
-from src import help, packdraft, unpackdraft, extittle, exvoice
 
 
 class MainWin(Tk):

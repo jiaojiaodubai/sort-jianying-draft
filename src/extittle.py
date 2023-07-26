@@ -6,8 +6,8 @@ from tkinter import messagebox, Checkbutton, BooleanVar
 
 from lxml import etree
 
-from src import template
-from src.public import names2name, win32_shell_copy, DESKTOP, PathX
+import template
+from public import names2name, win32_shell_copy, DESKTOP, PathX
 
 
 class ExTittle(template.Template):

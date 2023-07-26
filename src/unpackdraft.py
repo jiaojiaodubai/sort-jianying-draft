@@ -6,8 +6,8 @@ from shutil import rmtree, copytree
 from tkinter import filedialog, messagebox, BooleanVar
 from tkinter.ttk import Checkbutton
 
-from src import template
-from src.public import names2name, win32_shell_copy, DESKTOP, PathX
+import template
+from public import names2name, win32_shell_copy, DESKTOP, PathX
 
 
 class UnpackDraft(template.Template):
