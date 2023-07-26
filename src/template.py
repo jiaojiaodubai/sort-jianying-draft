@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from os import path
 from os.path import isdir
 from threading import Thread
@@ -7,10 +8,10 @@ from tkinter.ttk import Frame, Label, Button, Checkbutton, Combobox
 # 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
 from win32com.client import Dispatch
 
-from public import Initializer, names2name, DESKTOP, PathX
+from public import Initializer, names2name, PathX
 
 
-class Template(Frame):
+class Template(Frame, ABC):
     """
     为了减少代码复用而为导出型的面板设计的模板类
     :parameter
@@ -29,13 +30,10 @@ class Template(Frame):
     module_name_display: str
     p = Initializer()
     # 草稿行
-    source_path = []
-    # TODO: source或许值得记录
     draft_todo = [tuple()]
     draft_comb: Combobox
     d_comb_name = '已选草稿：'
     # 目标行
-    # TODO: target或许值得记录
     target_path: PathX
     target_comb: Combobox
     t_comb_name = '目标路径：'
@@ -107,10 +105,11 @@ class Template(Frame):
         self.grid_columnconfigure(index=1, weight=1)
         self.grid_columnconfigure(index=2, weight=1)
 
+    @abstractmethod
     def choose_export(self):
         select_temp = filedialog.askdirectory(parent=self,
                                               title='请选择导出位置',
-                                              initialdir=DESKTOP,
+                                              initialdir=self.target_path.now()
                                               )
         # 不要把工程导出到原工程路径，否则会引发困扰
         if isdir(select_temp) and select_temp not in self.p.draft_path.content:
@@ -123,6 +122,7 @@ class Template(Frame):
             messagebox.showwarning(title='发生错误', message='请选择合适的文件夹！')
             return False
 
+    @abstractmethod
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
         self.p.collect_draft()
@@ -163,5 +163,6 @@ class Template(Frame):
         else:
             messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')
 
+    @abstractmethod
     def patch_fun(self):
         pass

@@ -1,28 +1,43 @@
 from json import load
 from os import startfile
-from os.path import basename
+from os.path import basename, isdir
 from time import strftime, localtime
 from tkinter import messagebox, Checkbutton, BooleanVar
 
 import template
-from public import names2name, win32_shell_copy
+from public import names2name, win32_shell_copy, PathX, DESKTOP
 
 
-class ExVoice(template.Template):
-    checks: list[Checkbutton] = []
-    vals: list[BooleanVar] = []
-    checks_names = ['is_open', 'is_remember']
-    checks_names_display = ['完成后打开文件', '记住导出路径']
-    module_name = 'exvoice'
+class TestMould(template.Template):
+    # 模块级属性
+    module_name = 'ex_voice'
     module_name_display = '导出配音'
     audios = []
 
+    # 目标行
+    t_comb_name = '导出路径：'
+    target_path = PathX(m=module_name, n='target_path', d='导出路径', c=[DESKTOP])
+
+    # 复选行
+    checks: list[Checkbutton] = []
+    checks_names = ['完成后打开文件']
+    vals: list[BooleanVar] = []
+    vals_names = ['is_open']
+
     def __init__(self, parent, label):
         super().__init__(parent, label)
+        self.target_comb.config(values=self.target_path.content)
+        self.target_comb.current(0)
+
+    def choose_draft(self):
+        super().choose_draft()
+
+    def choose_export(self):
+        super().choose_export()
 
     def analyse_meta(self, draft_path: str):
         self.audios.clear()
-        with open('{}\\draft_content.json'.format(draft_path), 'r', encoding='utf-8') as f:
+        with open(fr'{draft_path}\draft_content.json', 'r', encoding='utf-8') as f:
             data = load(f)
             materials = data.get('materials')
             audios = materials.get('audios')
@@ -34,7 +49,7 @@ class ExVoice(template.Template):
                     i += 1
                     a_audio = {'serial': i,
                                'txt': item.get('name'),
-                               'path': '{}\\textReading\\{}'.format(draft_path, item.get('path').split('/')[-1]),
+                               'path': fr'{draft_path}\textReading\{item.get("path").split("/")[-1]}',
                                'tune': item.get('tone_type')
                                }
                     self.audios.append(a_audio)
@@ -42,29 +57,31 @@ class ExVoice(template.Template):
         f.close()
         return has_audio
 
-    def main_fun(self):
-        # 写入导出路径
-        if self.vals[1].get() == 1:
-            self.p.configer.set('exvoice_setting', 'export_path', ','.join(self.export_path))
-            self.p.configer.write(open('config.ini', 'w', encoding='utf-8'))
-        for draft in self.draft_todo[names2name(self.draft_todo).index(self.draft_comb.get())]:
-            have_audio = self.analyse_meta(draft)
-            if have_audio:
-                # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
-                suffix = strftime('%m.%d.%H-%M-%S', localtime())
-                filepath = '{}\\{}-收集的配音-{}'.format(self.export_path[0], basename(draft), suffix)
-                for audio in self.audios:
-                    win32_shell_copy(audio.get('path'),
-                                     '{}\\{}-{}-{}.wav'.format(filepath,
-                                                               # 序号既能防止重复，也能标示先后顺序
-                                                               audio.get('serial'),
-                                                               audio.get('txt'),
-                                                               audio.get('tune')
-                                                               )
-                                     )
+    def patch_fun(self):
+        if isdir(self.target_comb.get()):
+            # 写入导出路径
+            self.target_path.add(self.target_comb.get())
+            self.target_path.save(parser=self.p.configer, update=True)
+            for draft in self.draft_todo[names2name(self.draft_todo).index(self.draft_comb.get())]:
+                have_audio = self.analyse_meta(draft)
+                if have_audio:
+                    # 不能使用冒号，否则OSError: [WinError 123] 文件名、目录名或卷标语法不正确
+                    suffix = strftime('%m.%d.%H-%M-%S', localtime())
+                    filepath = '{}\\{}-收集的配音-{}'.format(self.target_path.now(), basename(draft), suffix)
+                    for audio in self.audios:
+                        win32_shell_copy(audio.get('path'),
+                                         '{}\\{}-{}-{}.wav'.format(filepath,
+                                                                   # 序号既能防止重复，也能标示先后顺序
+                                                                   audio.get('serial'),
+                                                                   audio.get('txt'),
+                                                                   audio.get('tune')
+                                                                   )
+                                         )
 
-                if self.vals[0].get() == 1:
-                    startfile(self.export_path[0])
-            else:
-                messagebox.showwarning(title='缺少内容',
-                                       message='你选择的草稿{}中没有找到配音！'.format(basename(draft)))
+                else:
+                    messagebox.showwarning(title='缺少内容',
+                                           message=f'您选择的草稿{basename(draft)}中没有找到配音！')
+            if self.vals[0].get() == 1:
+                startfile(self.target_path.now())
+        else:
+            messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')
