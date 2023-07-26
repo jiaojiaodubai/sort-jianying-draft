@@ -1,4 +1,0 @@
-d:
-cd D:\VIP\WorkSpace\PyHome\sort-jianying-draft\venv\Scripts
-activate
-pyinstaller -F -w --uac-admin -i D:\VIP\WorkSpace\PyHome\sort-jianying-draft\icon1.ico D:\VIP\WorkSpace\PyHome\sort-jianying-draft\src\main.py
