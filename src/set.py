@@ -1,16 +1,18 @@
+# TODO: 路径设置区域，作为一般的Frame加入到主面板中
+
 import winreg
 from base64 import b64decode
 from os import remove, path
 from tkinter import filedialog, messagebox, DISABLED, HORIZONTAL, NORMAL, Toplevel
 from tkinter.ttk import Progressbar, Combobox, Button, Label
 
-from public import img, PathManager, is_match, get_key_locate
+from public import img, is_match, get_key, Initializer
 
 
 # Toplevel是子窗口，相当于带独立窗口边框的frame，且不需要loop，它会自动随着主窗口loop
 
 
-class Initializer(Toplevel):
+class Set(Toplevel):
     message: Label
     labels = [Label]
     install_comb: Combobox
@@ -23,7 +25,7 @@ class Initializer(Toplevel):
     buttons = [Button]  # 把按钮绑定起来
     progress_bar: Progressbar
     submit_button: Button
-    p = PathManager()
+    p = Initializer()
 
     def __init__(self):
         super().__init__()
@@ -91,12 +93,13 @@ class Initializer(Toplevel):
                 self.buttons[i].config(state=DISABLED)
 
     def auto_get(self):
-        self.p.paths[0].insert(0, get_key_locate(winreg.HKEY_CURRENT_USER,
-                                                 r'Software\Bytedance\JianyingPro',
-                                                 'installDir').strip('\\'))
-        self.p.paths[1].insert(0, get_key_locate(winreg.HKEY_CURRENT_USER,
-                                                 r'Software\Bytedance\JianyingPro\GlobalSettings\History',
-                                                 'currentCustomDraftPath'))
+        # TODO: 解决剪映国际版的路径问题
+        self.p.paths[0].insert(0, get_key(winreg.HKEY_CURRENT_USER,
+                                          r'Software\Bytedance\JianyingPro',
+                                          'installDir').strip('\\'))
+        self.p.paths[1].insert(0, get_key(winreg.HKEY_CURRENT_USER,
+                                          r'Software\Bytedance\JianyingPro\GlobalSettings\History',
+                                          'currentCustomDraftPath'))
         # https://www.tutorialspoint.com/How-to-find-the-real-user-home-directory-using-Python
         self.p.paths[2].insert(0, fr'{path.expanduser("~")}\AppData\Local\JianyingPro\User Data')
         self.p.write_path()
