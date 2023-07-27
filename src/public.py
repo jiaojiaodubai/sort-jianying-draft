@@ -1,4 +1,4 @@
-from configparser import ConfigParser
+from configparser import ConfigParser, NoOptionError
 from os import mkdir, listdir
 from os.path import exists, isdir, abspath, basename, expanduser
 from re import match
@@ -133,6 +133,8 @@ class PathX:
             parser.read(d, encoding='utf-8')
             if parser.has_option(self.module, self.name):
                 self.content = parser.get(self.module, self.name).split(',')
+            else:
+                raise NoOptionError
         else:
             parser.add_section(self.module)
             parser.write(open(d, 'w', encoding='utf-8'))
@@ -206,12 +208,21 @@ class Initializer:
                                           r'Software\Bytedance\JianyingPro',
                                           'installDir').strip('\\')
                                   )
+            # self.install_path.add(get_key(HKEY_CURRENT_USER,
+            #                               r'Software\Bytedance\CapCut',
+            #                               'installDir').strip('\\')
+            #                       )
             self.draft_path.add(get_key(HKEY_CURRENT_USER,
                                         r'Software\Bytedance\JianyingPro\GlobalSettings\History',
                                         'currentCustomDraftPath')
                                 )
+            # self.draft_path.add(get_key(HKEY_CURRENT_USER,
+            #                             r'Software\Bytedance\CapCut\GlobalSettings\History',
+            #                             'currentCustomDraftPath')
+            #                     )
             # https://www.tutorialspoint.com/How-to-find-the-real-user-home-directory-using-Python
             self.Data_path.add(fr'{expanduser("~")}\AppData\Local\JianyingPro\User Data')
+            # self.Data_path.add(fr'{expanduser("~")}\AppData\Local\CapCut\User Data')
             self.write_path()
         except OSError:
             messagebox.showerror(title='获取路径失败',

@@ -1,4 +1,2 @@
 cd /d %~dp0
-cd .\venv\Scripts
-activate
-pyinstaller -F -w --uac-admin -i .\icon1.ico .\src\JianyingAssistant.py
+pyinstaller -F -w --uac-admin -i .\icon1.ico .\src\JianyingAssistant.py --upx-dir .\upx-4.0.2-win64

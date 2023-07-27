@@ -1,4 +1,4 @@
-from configparser import ConfigParser
+from configparser import ConfigParser, NoOptionError
 from os import walk, mkdir, listdir
 from os.path import isdir, abspath, basename, dirname, exists
 from pathlib import PurePath
@@ -84,8 +84,12 @@ class UnpackDraft(template.Template):
                      ]
         parser = ConfigParser()
         for path in paths_old:
-            path.load(parser, d=fr'{abspath(dirname(draft_path))}\config.ini')
-            path.sort(as_length=True)
+            try:
+                path.load(parser, d=fr'{abspath(dirname(draft_path))}\config.ini')
+                path.sort(as_length=True)
+            except NoOptionError:
+                messagebox.showwarning(title='配置异常',
+                                       message=f'草稿{basename(draft_path)}的配置文件有误\n请尝试在“设置”面板进行转换或重新导出。')
         paths_new = [self.p.install_path,
                      self.p.draft_path,
                      self.p.Data_path,
@@ -145,7 +149,7 @@ class UnpackDraft(template.Template):
                                                    message=f'复制草稿{basename(draft)}的过程中遇到错误。')
 
                     else:
-                        messagebox.showinfo('发生异常', fr'草稿{basename(draft)}没有媒体文件\n请在后续步骤中链接素材！')
+                        messagebox.showinfo('缺少文件', fr'草稿{basename(draft)}没有媒体文件\n请在后续步骤中链接素材！')
             self.message.config(text='导入完成！')
         else:
             messagebox.showwarning(title='路径无效', message='请检查路径是否存在！')

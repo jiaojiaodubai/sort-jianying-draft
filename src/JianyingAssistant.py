@@ -14,6 +14,7 @@ import extittle
 import exvoice
 import help
 import packdraft
+import setting
 import unpackdraft
 from public import Initializer, img
 
@@ -44,6 +45,7 @@ class MainWin(Tk):
         frame2 = unpackdraft.UnpackDraft(notebook, self.message)
         frame3 = extittle.ExTittle(notebook, self.message)
         frame4 = exvoice.ExVoice(notebook, self.message)
+        frame5 = setting.Setting(notebook, self.message)
         # frame5 = testmould.TestMould(notebook, self.message)
         frame6 = help.Help(notebook)
         # 适用format格式化字符串是将标签宽度限定为一个定值的好办法
@@ -51,6 +53,7 @@ class MainWin(Tk):
         notebook.add(frame2, text='{: ^14}'.format(frame2.module_name_display))
         notebook.add(frame3, text='{: ^14}'.format(frame3.module_name_display))
         notebook.add(frame4, text='{: ^14}'.format(frame4.module_name_display))
+        notebook.add(frame5, text='{: ^14}'.format(frame5.module_name_display))
         # notebook.add(frame5, text='{: ^14}'.format(frame5.module_name_display))
         notebook.add(frame6, text='{: ^14}'.format('帮助'))
 
