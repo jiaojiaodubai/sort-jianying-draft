@@ -5,7 +5,8 @@ from time import strftime, localtime
 from tkinter import messagebox, Checkbutton, BooleanVar
 
 import template
-from public import names2name, win32_shell_copy, PathX, DESKTOP
+from lib import DESKTOP, win32_shell_copy, names2name
+from public import PathX
 
 
 class ExVoice(template.Template):

@@ -7,7 +7,8 @@ from tkinter import filedialog, messagebox, BooleanVar
 from tkinter.ttk import Checkbutton
 
 import template
-from public import names2name, win32_shell_copy, DESKTOP, PathX
+from lib import DESKTOP, names2name, win32_shell_copy
+from public import PathX
 
 
 class UnpackDraft(template.Template):

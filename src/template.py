@@ -8,7 +8,8 @@ from tkinter.ttk import Frame, Label, Button, Checkbutton, Combobox
 # 在某些情况下，这个包会读取不成功，原因可能是虚拟环境没有配置好、路径没有加入环境变量
 from win32com.client import Dispatch
 
-from public import Initializer, names2name, PathX
+from lib import names2name
+from public import Initializer, PathX
 
 
 class Template(Frame, ABC):

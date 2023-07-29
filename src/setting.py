@@ -1,38 +1,47 @@
-import configparser
 from os import path
 from threading import Thread
-from tkinter import IntVar, messagebox, filedialog
+from tkinter import IntVar, messagebox, filedialog, DISABLED, NORMAL
 from tkinter.ttk import Frame, LabelFrame, Label, Radiobutton, Combobox, Button
 
 from win32com.client import Dispatch
 
-from public import names2name
+from lib import names2name
+from public import Initializer
+from version import SetVersion
 
 
 class Setting(Frame):
     module_name_display = '设置'
     message: Label
-    version_val: IntVar
+    version_bt_cn: Radiobutton
+    version_bt_it: Radiobutton
+    ver: IntVar
     d_comb_name = '选择草稿'
-    p = configparser.ConfigParser
+    p = Initializer()
     draft_todo = []
     shells = Dispatch("WScript.Shell")
 
     def __init__(self, master, label: Label):
         super().__init__(master, width=560, height=155)
+        # print(self.p.version)
         self.message = label
-        self.version_val = IntVar()
+        self.ver = IntVar()
+        self.ver.set(('JianyingPro', 'CapCut').index(self.p.version_choose))
         self.columnconfigure(index=0, weight=1)
         version_fr = LabelFrame(self, text='选择你的剪映发行版本', width=560, padding=5)
         version_fr.grid(row=0, column=0, sticky='EW', padx=5)
         version_fr.columnconfigure(index=0, weight=1)
         version_fr.columnconfigure(index=1, weight=1)
-        version_bt_cn = Radiobutton(master=version_fr, text='中文版', variable=self.version_val, value=0)
-        version_bt_cn.grid(row=0, column=0)
-        version_bt_it = Radiobutton(master=version_fr, text='国际版', variable=self.version_val, value=1)
-        version_bt_it.grid(row=0, column=1)
+        version_fr.columnconfigure(index=2, weight=1)
+        self.version_bt_cn = Radiobutton(master=version_fr, text='中文版', variable=self.ver, value=0)
+        self.version_bt_cn.grid(row=0, column=0)
+        self.version_bt_it = Radiobutton(master=version_fr, text='国际版', variable=self.ver, value=1)
+        self.version_bt_it.grid(row=0, column=1)
+        version_bt = Button(master=version_fr, text='选择版本', command=self.set_ver)
+        version_bt.grid(row=0, column=2)
         version_fr.grid(row=0, column=0, sticky='EW', padx=5)
-
+        self.version_bt_cn.config(state=DISABLED)
+        self.version_bt_it.config(state=DISABLED)
         ini_updating = LabelFrame(self, text='旧版草稿文件转换', width=560, padding=5)
         ini_updating.grid(row=1, column=0, sticky='EW', padx=5)
         # 草稿行
@@ -47,6 +56,9 @@ class Setting(Frame):
                                       width=20
                                       )
         self.main_fun_button.grid(row=2, column=1, columnspan=2)
+        self.main_fun_button.config(state=DISABLED)
+        if self.p.version_exist['JianyingPro'] and self.p.version_exist['CapCut']:
+            self.main_fun_button.config(state=NORMAL)
 
     def choose_draft(self):
         # 每次点开选择按钮都刷新草稿列表
@@ -76,3 +88,12 @@ class Setting(Frame):
 
     def main_fun(self):
         pass
+
+    def set_ver(self):
+        self.version_bt_cn.config(state=NORMAL)
+        self.version_bt_it.config(state=NORMAL)
+        version = SetVersion()
+        self.ver.set(('JianyingPro', 'CapCut').index(version))
+
+        self.version_bt_cn.config(state=DISABLED)
+        self.version_bt_it.config(state=DISABLED)

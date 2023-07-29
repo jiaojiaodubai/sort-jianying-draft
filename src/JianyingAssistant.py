@@ -16,7 +16,8 @@ import help
 import packdraft
 import setting
 import unpackdraft
-from public import Initializer, img
+from lib import img
+from public import Initializer
 
 
 class MainWin(Tk):
