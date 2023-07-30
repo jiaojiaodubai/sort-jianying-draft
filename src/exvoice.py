@@ -4,12 +4,11 @@ from os.path import basename, isdir
 from time import strftime, localtime
 from tkinter import messagebox, Checkbutton, BooleanVar
 
-import template
 from lib import DESKTOP, win32_shell_copy, names2name
-from public import PathX
+from public import PathX, Template
 
 
-class ExVoice(template.Template):
+class ExVoice(Template):
     # 模块级属性
     module_name = 'ex_voice'
     module_name_display = '导出配音'
@@ -17,7 +16,7 @@ class ExVoice(template.Template):
 
     # 目标行
     t_comb_name = '导出路径：'
-    target_path = PathX(m=module_name, n='target_path', d='导出路径', c=[DESKTOP])
+    target_path = PathX(module=module_name, name='target_path', display='导出路径', content=[DESKTOP])
 
     # 复选行
     checks: list[Checkbutton] = []

@@ -6,12 +6,11 @@ from tkinter import messagebox, Checkbutton, BooleanVar
 
 from lxml import etree
 
-import template
 from lib import DESKTOP, win32_shell_copy, names2name
-from public import PathX
+from public import PathX, Template
 
 
-class ExTittle(template.Template):
+class ExTittle(Template):
     # 模块级属性
     module_name = 'ex_tittle'
     module_name_display = '导出字幕'
@@ -19,7 +18,7 @@ class ExTittle(template.Template):
 
     # 目标行
     t_comb_name = '导出路径：'
-    target_path = PathX(m=module_name, n='target_path', d='导出路径', c=[DESKTOP])
+    target_path = PathX(module=module_name, name='target_path', display='导出路径', content=[DESKTOP])
 
     # 复选行
     checks: list[Checkbutton] = []

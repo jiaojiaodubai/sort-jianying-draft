@@ -6,22 +6,21 @@ from shutil import rmtree, copytree
 from tkinter import filedialog, messagebox, BooleanVar
 from tkinter.ttk import Checkbutton
 
-import template
 from lib import DESKTOP, names2name, win32_shell_copy
-from public import PathX
+from public import PathX, Template
 
 
-class UnpackDraft(template.Template):
+class UnpackDraft(Template):
     # 模块级属性
     module_name = 'unpack'
     module_name_display = '导入草稿'
 
     # 草稿行
-    source_path = PathX(m=module_name, n='source_path', d='草稿源', c=[DESKTOP])
+    source_path = PathX(module=module_name, name='source_path', display='草稿源', content=[DESKTOP])
 
     # 目标行
     t_comb_name = '素材路径：'
-    target_path = PathX(m=module_name, n='target_path', d='素材目录')
+    target_path = PathX(module=module_name, name='target_path', display='素材目录')
 
     # 复选行
     checks: list[Checkbutton] = []
@@ -78,15 +77,15 @@ class UnpackDraft(template.Template):
         """
         jsons = ['draft_agency_config.json', 'draft_content.json', 'draft_meta_info.json']
         # 旧的素材目录名称需要自己读取、自己分割
-        paths_old = [PathX(m='public', n='install_path', d='ipo'),
-                     PathX(m='public', n='draft_path', d='dpo'),
-                     PathX(m='public', n='Data_path', d='Dpo'),
-                     PathX(m='pack', n='components_home', d='cho'),
+        paths_old = [PathX(module='public', name='install_path', display='ipo'),
+                     PathX(module='public', name='draft_path', display='dpo'),
+                     PathX(module='public', name='Data_path', display='Dpo'),
+                     PathX(module='pack', name='components_home', display='cho'),
                      ]
         parser = ConfigParser()
         for path in paths_old:
             try:
-                path.load(parser, d=fr'{abspath(dirname(draft_path))}\config.ini')
+                path.load(parser, destination=fr'{abspath(dirname(draft_path))}\config.ini')
                 path.sort(as_length=True)
             except NoOptionError:
                 messagebox.showwarning(title='配置异常',
@@ -94,10 +93,10 @@ class UnpackDraft(template.Template):
         paths_new = [self.p.install_path,
                      self.p.draft_path,
                      self.p.Data_path,
-                     PathX(m='upack',
-                           n='this_draft_components_home',
-                           d='本草稿的素材目录',
-                           c=[fr'{self.target_path.now()}\{basename(draft_path)}'])
+                     PathX(module='upack',
+                           name='this_draft_components_home',
+                           display='本草稿的素材目录',
+                           content=[fr'{self.target_path.now()}\{basename(draft_path)}'])
                      ]
         # 遍历三个文件
         for json in jsons:

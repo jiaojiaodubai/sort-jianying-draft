@@ -12,7 +12,7 @@ class Top(Toplevel):
     version: IntVar
 
     def __init__(self, master, val: int = 0):
-        super().__init__(master)
+        super().__init__(master=master)
         self.version = IntVar()
         self.version.set(value=val)
         self.resizable(False, False)

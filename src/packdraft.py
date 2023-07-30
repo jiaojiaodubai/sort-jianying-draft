@@ -6,12 +6,11 @@ from time import strftime, localtime
 from tkinter import BooleanVar, messagebox
 from tkinter.ttk import Checkbutton
 
-import template
 from lib import DESKTOP, win32_shell_copy, names2name
-from public import PathX
+from public import PathX, Template
 
 
-class PackDraft(template.Template):
+class PackDraft(Template):
     # 模块级属性
     module_name = 'pack'
     module_name_display = '导出草稿'
@@ -20,7 +19,7 @@ class PackDraft(template.Template):
 
     # 目标行
     t_comb_name = '导出路径：'
-    target_path = PathX(m=module_name, n='target_path', d='导出路径', c=[DESKTOP])
+    target_path = PathX(module=module_name, name='target_path', display='导出路径', content=[DESKTOP])
 
     # 复选行
     checks: list[Checkbutton] = []
@@ -31,7 +30,7 @@ class PackDraft(template.Template):
 
     def __init__(self, parent, label):
         super().__init__(parent, label)
-        self.components_home = PathX(m=self.module_name, n='components_home', d='素材目录')
+        self.components_home = PathX(module=self.module_name, name='components_home', display='素材目录')
         self.target_comb.config(values=self.target_path.content)
         self.target_comb.current(0)
 

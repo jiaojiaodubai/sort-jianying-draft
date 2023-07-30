@@ -1,3 +1,4 @@
+
 from os.path import basename, abspath
 from re import match
 from winreg import HKEY_CURRENT_USER, QueryValueEx, OpenKey
