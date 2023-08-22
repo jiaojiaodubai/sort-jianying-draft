@@ -11,8 +11,7 @@
 
 ## 构建
 
-如果想从源码构建本程序，你需要满足以下条件：
+如果想从源码构建本程序，请按照以下步骤执行：
 
-1. 安装V3.0以上的[Python](https://www.python.org/)或它的发行版；
-2. 采用`>pip install -r requirements.txt`安装必要的第三方库；或者参考`requirements.txt`的内容进行手动安装。
-3. 参考`build cmd.txt`的内容进行构建。
+1. 安装V3.0以上的[Python](https://www.python.org/downloads/)或它的发行版；
+2. 以管理员身份运行`build cmd.bat`。
