@@ -24,8 +24,14 @@ The JianyingAssistant is a green tool work with [CapCut](https://lv.ulikecam.com
 
 ## 构建（Build）
 
-如果想从源码构建本程序，你需要满足以下条件：
+你可以通过以下步骤从源码手动构建本程序：
+
+You can manually build this program from the source code by following these steps:
 
 1. 安装V3.0以上的[Python](https://www.python.org/)或它的发行版；
-2. 采用`>pip install -r requirements.txt`安装必要的第三方库；或者参考`requirements.txt`的内容进行手动安装。
-3. 参考`build cmd.txt`的内容进行构建。
+
+   Install [Python](https://www.python.org/) V3.0 (or its distribution version) or later version;
+  
+2. 运行`build cmd.bat`。
+
+   Run `build cmd.bat`.
