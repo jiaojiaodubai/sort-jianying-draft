@@ -88,7 +88,7 @@ class Initializer:
         self.install_path = PathX('public', 'install_path', '安装路径')
         self.draft_path = PathX('public', 'draft_path', '草稿路径')
         self.Data_path = PathX('public', 'Data_path', 'Data路径')
-        self.read_path()
+        self.read_path(first_time=first_time)
 
     def batch_paths(self, appendix=None):
         if appendix is None:
@@ -109,7 +109,7 @@ class Initializer:
         with open(r'.\config.ini', 'w', encoding='utf-8') as f:
             self.configer.write(f)
 
-    def read_path(self) -> bool:
+    def read_path(self, first_time: bool = False) -> bool:
         """
         读取config.ini的默认配置，若存在则写入p.paths，若不存在则创建config.ini并增加相应节点。
         Returns:
@@ -142,6 +142,7 @@ class Initializer:
                                       fr'Software\Bytedance\{version}',
                                       'installDir').strip('\\')
                               )
+        # print(self.Data_path)
         self.draft_path.add(get_key(HKEY_CURRENT_USER,
                                     fr'Software\Bytedance\{version}\GlobalSettings\History',
                                     'currentCustomDraftPath')
@@ -170,7 +171,7 @@ class Initializer:
             else:
                 self.version_choose = SetVersion()
                 # 已经包含异常处理
-                self.get_path(self.version_choose)
+            self.get_path(self.version_choose)
             self.write_path()
             self.configer['setting']['version_choose'] = str(self.version_choose)
             with open(r'.\config.ini', 'w', encoding='utf-8') as f:

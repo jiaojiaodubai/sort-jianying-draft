@@ -4,8 +4,8 @@
 # http://msdn.microsoft.com/en-us/library/ms646997.aspx
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(2, 7, 1, 0),  # 文件版本
-    prodvers=(2, 7, 1, 0),  # 生产商
+    filevers=(2, 7, 2, 0),  # 文件版本
+    prodvers=(2, 7, 2, 0),  # 生产商
     mask=0x3f, # 两个位掩码
     flags=0x0,
     OS=0x4004,  # 关于操作系统的，无需修改它
@@ -20,11 +20,11 @@ VSVersionInfo(
         '080404b0',
         [StringStruct('CompanyName', 'jiaojiaodubai'),  # 鼠标搁那里会显示的东西
         StringStruct('FileDescription', '剪映导出助手'),  # 文件名
-        StringStruct('FileVersion', '2.7.1'),  # 版本号
+        StringStruct('FileVersion', '2.7.2'),  # 版本号
         StringStruct('LegalCopyright', 'Copyright (C) 2022-2023 jiaojiaodubai . All Rights Reserved'),  # 版权，"Copyright"指盈利版权
         StringStruct('OriginalFilename', 'JianyingAssistant.exe'),  # 原始文件名，不知道为什么要再搞一次
         StringStruct('ProductName', 'JianyingAssistant'),  # 产品名称
-        StringStruct('ProductVersion', '2.7.1'),  # 版本号，再详细信息里会有显示
+        StringStruct('ProductVersion', '2.7.2'),  # 版本号，再详细信息里会有显示
         ])
       ]),
     VarFileInfo([VarStruct('Translation', [2052, 1200])])  # 语言，[2052, 1200]是简体，中国
