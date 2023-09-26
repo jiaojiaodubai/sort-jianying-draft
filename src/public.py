@@ -84,11 +84,11 @@ class Initializer:
     version_exist = {'JianyingPro': False, 'CapCut': False}
     version_choose: str
 
-    def __init__(self, first_time: bool = False):
+    def __init__(self):
         self.install_path = PathX('public', 'install_path', '安装路径')
         self.draft_path = PathX('public', 'draft_path', '草稿路径')
         self.Data_path = PathX('public', 'Data_path', 'Data路径')
-        self.read_path(first_time=first_time)
+        self.read_path()
 
     def batch_paths(self, appendix=None):
         if appendix is None:
@@ -109,7 +109,7 @@ class Initializer:
         with open(r'.\config.ini', 'w', encoding='utf-8') as f:
             self.configer.write(f)
 
-    def read_path(self, first_time: bool = False) -> bool:
+    def read_path(self) -> bool:
         """
         读取config.ini的默认配置，若存在则写入p.paths，若不存在则创建config.ini并增加相应节点。
         Returns:
@@ -120,7 +120,7 @@ class Initializer:
         self.configer.read(r'.\config.ini', encoding='utf-8')
         try:
             for key in list(self.version_exist.keys()):
-                self.version_exist[key] = self.configer['setting'][key]
+                self.version_exist[key] = self.configer['setting'].getboolean(key)
             self.version_choose = self.configer['setting']['version_choose']
         except KeyError:
             self.reset_ini()
@@ -243,7 +243,7 @@ class Template(Frame, ABC):
         super().__init__(master=master, width=560, height=155)
         # 模块
         self.message = label
-        self.p = Initializer(first_time=True)
+        self.p = Initializer()
         # 部分组件创建时依赖预配置，因此先读取配置
 
         # 草稿行
