@@ -78,7 +78,7 @@ class MainWin(Tk):
         notebook.add(frame6, text='{: ^14}'.format('帮助'))
         # 运行环境检测
         for process in process_iter(attrs=['name']):
-            if process.name() == 'JianyingPro.exe':
+            if process.name() == 'JianyingPro.exe' or process.name() == 'CapCut.exe':
                 messagebox.showerror(title='剪映未关闭',
                                      message='请关闭剪映再启动本程序！'
                                      )

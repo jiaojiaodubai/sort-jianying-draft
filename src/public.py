@@ -195,7 +195,7 @@ class Initializer:
         for path in self.draft_path.content:
             for item in listdir(path):
                 full_path = fr'{path}\{item}'
-                if isdir(full_path):
+                if isdir(full_path) and exists(fr'{full_path}\draft_content.json'):
                     shortcut = self.shells.CreateShortCut(fr'.\draft-preview\{item}.lnk')
                     shortcut.Targetpath = full_path
                     shortcut.save()

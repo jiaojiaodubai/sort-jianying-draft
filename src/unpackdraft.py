@@ -1,6 +1,6 @@
 from configparser import ConfigParser, NoOptionError
 from os import walk, mkdir, listdir
-from os.path import isdir, abspath, basename, dirname, exists
+from os.path import isdir, abspath, basename, dirname, exists, join
 from pathlib import PurePath
 from shutil import rmtree, copytree
 from tkinter import filedialog, messagebox, BooleanVar
@@ -75,7 +75,11 @@ class UnpackDraft(Template):
         Returns:
             None
         """
-        jsons = ['draft_agency_config.json', 'draft_content.json', 'draft_meta_info.json']
+        jsons = []
+        for root, dirs, files in walk(draft_path):
+            for file in files:
+                if file.endswith('.json'):
+                    jsons.append(join(root, file))
         # 旧的素材目录名称需要自己读取、自己分割
         paths_old = [PathX(module='public', name='install_path', display='ipo'),
                      PathX(module='public', name='draft_path', display='dpo'),
@@ -100,7 +104,7 @@ class UnpackDraft(Template):
                      ]
         # 遍历三个文件
         for json in jsons:
-            with open(fr'{draft_path}\{json}', 'r', encoding='utf-8') as json_file:
+            with open(json, 'r', encoding='utf-8') as json_file:
                 json_content = json_file.read()
                 # 遍历四种路径，本次草稿位置、安装位置、全局草稿位置、缓存位置
                 for path_old, path_new in zip(paths_old, paths_new):
@@ -112,7 +116,7 @@ class UnpackDraft(Template):
                 mkdir(fr'{draft_path}\temp')
             except FileExistsError:
                 pass
-            with open(fr'{draft_path}\temp\{json}', 'w', encoding='utf-8') as f:
+            with open(fr'{draft_path}\temp\{basename(json)}', 'w', encoding='utf-8') as f:
                 f.write(json_content)
 
     def patch_fun(self):
